@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>C+V.me — Partage de texte instantané</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #0d0d14;
+  --card: #15151f;
+  --card2: #1c1c28;
+  --border: #27273a;
+  --accent: #6366f1;
+  --accent-h: #4f52d9;
+  --accent-glow: rgba(99,102,241,0.25);
+  --accent2: #a5b4fc;
+  --green: #4ade80;
+  --red: #f87171;
+  --yellow: #fbbf24;
+  --text: #e2e2f2;
+  --muted: #64648a;
+  --r: 14px;
+}
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* HEADER */
+header {
+  text-align: center;
+  padding: 2.5rem 1rem 1rem;
+}
+.logo {
+  font-size: 2rem;
+  font-weight: 900;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.tagline { color: var(--muted); font-size: 0.85rem; margin-top: 0.35rem; }
+
+/* MAIN */
+main {
+  width: 100%;
+  max-width: 500px;
+  padding: 1.5rem 1rem 4rem;
+}
+
+/* SCREENS */
+.screen { display: none; }
+.screen.active { display: block; animation: fadeIn 0.25s ease; }
+@keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:none; } }
+
+/* CARD */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+.card-title { font-weight: 700; font-size: 1rem; margin-bottom: 0.9rem; }
+
+/* HOME GRID */
+.home-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.75rem; }
+.choice-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1.4rem 0.75rem;
+  background: var(--card);
+  border: 2px solid var(--border);
+  border-radius: var(--r);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 0.88rem;
+  font-weight: 600;
+  transition: all 0.18s;
+}
+.choice-btn:hover { border-color: var(--accent); background: #1a1a2a; box-shadow: 0 0 24px var(--accent-glow); transform: translateY(-2px); }
+.choice-btn .icon { font-size: 1.8rem; }
+.choice-btn small { color: var(--muted); font-weight: 400; font-size: 0.75rem; text-align: center; line-height: 1.3; }
+
+/* BUTTONS */
+.btn {
+  display: flex; align-items: center; justify-content: center; gap: 0.45rem;
+  padding: 0.8rem 1.25rem; border-radius: 10px;
+  font-size: 0.92rem; font-weight: 600; cursor: pointer; border: none;
+  transition: all 0.18s; width: 100%;
+}
+.btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none !important; }
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover:not(:disabled) { background: var(--accent-h); transform: translateY(-1px); box-shadow: 0 4px 18px var(--accent-glow); }
+.btn-ghost { background: var(--card2); color: var(--text); border: 1px solid var(--border); }
+.btn-ghost:hover:not(:disabled) { background: #222230; }
+.btn-sm { width: auto; padding: 0.5rem 0.9rem; font-size: 0.82rem; }
+.btn-row { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.75rem; }
+
+/* CODE DISPLAY */
+.code-box {
+  background: var(--card2);
+  border-radius: 10px;
+  padding: 1.25rem;
+  text-align: center;
+  margin: 1rem 0;
+}
+.code-box .lbl { color: var(--muted); font-size: 0.78rem; margin-bottom: 0.4rem; }
+.code-val {
+  font-size: 2.6rem; font-weight: 900;
+  letter-spacing: 0.2em; color: var(--accent2);
+  font-family: 'Courier New', monospace;
+}
+.code-box .sub { color: var(--muted); font-size: 0.75rem; margin-top: 0.35rem; }
+
+/* TIMER */
+.timer-wrap { background: var(--border); border-radius: 99px; height: 3px; overflow: hidden; margin: 0.6rem 0 0.3rem; }
+.timer-bar { height: 100%; background: var(--accent); border-radius: 99px; transition: width 1s linear, background 1s; }
+.timer-bar.warn { background: var(--yellow); }
+.timer-bar.crit { background: var(--red); }
+.timer-txt { color: var(--muted); font-size: 0.75rem; text-align: center; }
+
+/* STATUS PILL */
+.pill {
+  display: inline-flex; align-items: center; gap: 0.35rem;
+  padding: 0.28rem 0.75rem; border-radius: 99px;
+  font-size: 0.78rem; font-weight: 600; margin-bottom: 1rem;
+}
+.pill .pd { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.pill.waiting { background: rgba(251,191,36,.1); color: var(--yellow); border: 1px solid rgba(251,191,36,.2); }
+.pill.waiting .pd { animation: blink 1.2s infinite; }
+.pill.connected { background: rgba(74,222,128,.1); color: var(--green); border: 1px solid rgba(74,222,128,.2); }
+.pill.error { background: rgba(248,113,113,.1); color: var(--red); border: 1px solid rgba(248,113,113,.2); }
+@keyframes blink { 0%,100%{opacity:1}50%{opacity:.2} }
+
+/* TEXTAREA */
+textarea {
+  width: 100%; min-height: 160px;
+  background: var(--card2); border: 2px solid var(--border);
+  border-radius: 10px; color: var(--text);
+  font-size: 0.92rem; font-family: 'Courier New', monospace;
+  padding: 0.8rem; resize: vertical; outline: none;
+  transition: border-color 0.18s;
+}
+textarea:focus { border-color: var(--accent); }
+textarea[readonly] { opacity: 0.8; }
+
+.meta { display: flex; justify-content: space-between; align-items: center; margin: 0.35rem 0 0.6rem; }
+.cc { color: var(--muted); font-size: 0.75rem; }
+.typing { color: var(--muted); font-size: 0.75rem; font-style: italic; min-height: 1em; }
+
+/* JOIN INPUT */
+.join-group { display: flex; gap: 0.6rem; margin: 1rem 0 0.5rem; }
+.code-input {
+  flex: 1; background: var(--card2); border: 2px solid var(--border);
+  border-radius: 10px; color: var(--text);
+  font-size: 1.5rem; font-family: 'Courier New', monospace; font-weight: 700;
+  letter-spacing: 0.15em; text-align: center; text-transform: uppercase;
+  padding: 0.6rem 0.5rem; outline: none; transition: border-color 0.18s;
+}
+.code-input:focus { border-color: var(--accent); }
+.err { color: var(--red); font-size: 0.82rem; min-height: 1.2em; }
+
+/* DIVIDER */
+.divider {
+  display: flex; align-items: center; gap: 0.6rem;
+  color: var(--muted); font-size: 0.75rem; margin: 1rem 0;
+}
+.divider::before, .divider::after { content:''; flex:1; border-top: 1px solid var(--border); }
+
+/* INFO */
+.info-list { display: flex; flex-direction: column; gap: 0.4rem; }
+.info-row { display: flex; gap: 0.5rem; color: var(--muted); font-size: 0.78rem; line-height: 1.4; }
+
+/* NOTIF */
+.notif {
+  position: fixed; bottom: 1.25rem; left: 50%;
+  transform: translateX(-50%) translateY(8px);
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 10px; padding: 0.65rem 1.1rem;
+  font-size: 0.85rem; box-shadow: 0 8px 28px rgba(0,0,0,.5);
+  opacity: 0; transition: all 0.25s; z-index: 999; white-space: nowrap;
+}
+.notif.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+footer { color: var(--muted); font-size: 0.72rem; padding: 1rem; text-align: center; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">📋 C+V.me</div>
+  <p class="tagline">Partage de texte instantané entre appareils · Chiffré · Éphémère</p>
+</header>
+
+<main>
+
+  <!-- HOME -->
+  <div class="screen active" id="s-home">
+    <div class="home-grid">
+      <button class="choice-btn" onclick="startHost()">
+        <span class="icon">📤</span>
+        <span>Partager</span>
+        <small>Générer un code et envoyer du texte</small>
+      </button>
+      <button class="choice-btn" onclick="showJoin()">
+        <span class="icon">📥</span>
+        <span>Recevoir</span>
+        <small>Entrer un code et récupérer du texte</small>
+      </button>
+    </div>
+
+    <div class="card" id="join-card" style="display:none">
+      <div class="card-title">Entrer le code</div>
+      <div class="join-group">
+        <input class="code-input" id="code-input" type="text" maxlength="7"
+          placeholder="ABC-DEF" oninput="fmtCode()" onkeydown="if(event.key==='Enter')joinSession()"/>
+        <button class="btn btn-primary" style="width:auto;padding:0 1.1rem" onclick="joinSession()">→</button>
+      </div>
+      <div class="err" id="join-err"></div>
+    </div>
+
+    <div class="card">
+      <div class="info-list">
+        <div class="info-row">🔒 <span>Chiffrement AES-256 côté client — le serveur ne voit jamais votre texte</span></div>
+        <div class="info-row">⏱️ <span>Code valide 10 minutes, expire automatiquement</span></div>
+        <div class="info-row">🌐 <span>Fonctionne entre tous les appareils, tous les réseaux</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HOST -->
+  <div class="screen" id="s-host">
+    <div class="card">
+      <div id="h-pill" class="pill waiting"><span class="pd"></span><span>En attente de connexion…</span></div>
+      <div class="code-box">
+        <div class="lbl">Sur l'autre appareil, aller sur ce site et entrer :</div>
+        <div class="code-val" id="h-code">—</div>
+        <div class="sub" id="h-timer-txt">Expire dans 10:00</div>
+      </div>
+      <div class="timer-wrap"><div class="timer-bar" id="h-timer-bar"></div></div>
+      <button class="btn btn-ghost" style="margin-top:0.5rem" onclick="copyCode()">📋 Copier le code</button>
+    </div>
+
+    <div class="card" id="h-transfer" style="display:none">
+      <div class="card-title">✏️ Texte à envoyer</div>
+      <textarea id="h-ta" placeholder="Écris ton texte ici…" oninput="hTyping()"></textarea>
+      <div class="meta">
+        <span class="cc" id="h-cc">0 car.</span>
+        <span class="typing" id="p-typing"></span>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="sendText()">🚀 Envoyer</button>
+        <button class="btn btn-ghost btn-sm" onclick="copyTA('h-ta')">📋 Copier</button>
+      </div>
+    </div>
+
+    <button class="btn btn-ghost" onclick="closeHost()" style="margin-top:0.25rem">✕ Fermer la session</button>
+  </div>
+
+  <!-- PEER -->
+  <div class="screen" id="s-peer">
+    <div class="card">
+      <div id="p-pill" class="pill connected"><span class="pd"></span><span>Connecté</span></div>
+      <div class="card-title">📥 Texte reçu</div>
+      <textarea id="p-ta" readonly placeholder="En attente du texte…"></textarea>
+      <div class="meta">
+        <span class="cc" id="p-cc">0 car.</span>
+        <span class="typing" id="h-typing"></span>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="copyTA('p-ta')">📋 Copier le texte</button>
+        <button class="btn btn-ghost btn-sm" onclick="document.getElementById('p-ta').value='';cc('p-ta','p-cc')">🗑</button>
+      </div>
+
+      <div class="divider">répondre (optionnel)</div>
+
+      <textarea id="p-send-ta" placeholder="Envoyer du texte en retour…" oninput="pTyping()"></textarea>
+      <div class="meta"><span class="cc" id="p-send-cc">0 car.</span></div>
+      <button class="btn btn-ghost" onclick="peerSend()" style="margin-top:0.5rem">↩ Envoyer en retour</button>
+    </div>
+
+    <button class="btn btn-ghost" onclick="leavePeer()" style="margin-top:0.25rem">✕ Quitter</button>
+  </div>
+
+</main>
+
+<footer>Aucune donnée stockée · Open source</footer>
+<div class="notif" id="notif"></div>
+
+<script>
+// ── CRYPTO ────────────────────────────────────────────────────────────────────
+async function getKey(code) {
+  const raw = code.replace('-','') + 'cvme-salt-v1';
+  const enc = new TextEncoder();
+  const km = await crypto.subtle.importKey('raw', enc.encode(raw), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey(
+    { name:'PBKDF2', salt: enc.encode('cvme'), iterations: 100000, hash:'SHA-256' },
+    km, { name:'AES-GCM', length:256 }, false, ['encrypt','decrypt']
+  );
+}
+async function aesEncrypt(text, code) {
+  const key = await getKey(code);
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ct = await crypto.subtle.encrypt({name:'AES-GCM',iv}, key, new TextEncoder().encode(text));
+  const buf = new Uint8Array(12 + ct.byteLength);
+  buf.set(iv); buf.set(new Uint8Array(ct), 12);
+  return btoa(String.fromCharCode(...buf));
+}
+async function aesDecrypt(b64, code) {
+  const key = await getKey(code);
+  const buf = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+  const pt = await crypto.subtle.decrypt({name:'AES-GCM', iv:buf.slice(0,12)}, key, buf.slice(12));
+  return new TextDecoder().decode(pt);
+}
+
+// ── STATE ─────────────────────────────────────────────────────────────────────
+let code = null, role = null;
+let pollId = null, timerId = null;
+let lastTs = 0;
+let timerStart = null;
+const TTL = 10 * 60 * 1000;
+
+// ── SCREENS ───────────────────────────────────────────────────────────────────
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('s-' + id).classList.add('active');
+}
+
+// ── HOME ──────────────────────────────────────────────────────────────────────
+function showJoin() {
+  const c = document.getElementById('join-card');
+  c.style.display = c.style.display === 'none' ? 'block' : 'none';
+  if (c.style.display === 'block') document.getElementById('code-input').focus();
+}
+
+function fmtCode() {
+  const el = document.getElementById('code-input');
+  let v = el.value.toUpperCase().replace(/[^A-Z0-9]/g,'');
+  if (v.length > 3) v = v.slice(0,3) + '-' + v.slice(3,6);
+  el.value = v;
+}
+
+// ── HOST ──────────────────────────────────────────────────────────────────────
+async function startHost() {
+  const res = await fetch('/api/session', {method:'POST'});
+  const data = await res.json();
+  code = data.code;
+  role = 'host';
+  lastTs = 0;
+  document.getElementById('h-code').textContent = code;
+  startTimer(TTL);
+  show('host');
+  pollHost();
+}
+
+function pollHost() {
+  pollId = setInterval(async () => {
+    try {
+      const r = await fetch(`/api/message?code=${code}&from=host&since=${lastTs}`);
+      if (!r.ok) { stopAll(); return; }
+      const d = await r.json();
+
+      // Peer connected?
+      if (d.peerConnected) {
+        setPill('h-pill','connected','🟢 Appareil connecté');
+        document.getElementById('h-transfer').style.display = 'block';
+      }
+
+      // New message for host (from peer)?
+      if (d.payload && d.ts > lastTs) {
+        lastTs = d.ts;
+        try {
+          const txt = await aesDecrypt(d.payload, code);
+          const ta = document.getElementById('h-ta');
+          if (!ta.value) { ta.value = txt; cc('h-ta','h-cc'); }
+          showTyping('p-typing', "L'autre appareil a envoyé du texte");
+          notify('📥 Texte reçu en retour !');
+        } catch(e) {}
+      }
+    } catch(e) {}
+  }, 1200);
+}
+
+async function sendText() {
+  const txt = document.getElementById('h-ta').value.trim();
+  if (!txt) return;
+  const payload = await aesEncrypt(txt, code);
+  await fetch(`/api/message?code=${code}&from=host`, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({payload})
+  });
+  notify('✅ Texte envoyé !');
+}
+
+function hTyping() {
+  cc('h-ta','h-cc');
+  // lightweight: just update char count (typing indicator via polling would add complexity)
+}
+
+function copyCode() {
+  navigator.clipboard.writeText(code).then(() => notify('📋 Code copié !'));
+}
+
+async function closeHost() {
+  if (code) await fetch(`/api/message?code=${code}`, {method:'DELETE'});
+  stopAll(); reset(); show('home');
+}
+
+// ── PEER ──────────────────────────────────────────────────────────────────────
+async function joinSession() {
+  const val = document.getElementById('code-input').value.toUpperCase().replace(/\s/g,'');
+  document.getElementById('join-err').textContent = '';
+  if (val.replace('-','').length < 6) {
+    document.getElementById('join-err').textContent = 'Code incomplet'; return;
+  }
+  const r = await fetch(`/api/session?code=${val}`);
+  if (!r.ok) {
+    document.getElementById('join-err').textContent = 'Code invalide ou expiré'; return;
+  }
+  code = val; role = 'peer'; lastTs = 0;
+  show('peer');
+  pollPeer();
+}
+
+function pollPeer() {
+  pollId = setInterval(async () => {
+    try {
+      const r = await fetch(`/api/message?code=${code}&from=peer&since=${lastTs}`);
+      if (!r.ok) {
+        setPill('p-pill','error','Session fermée');
+        stopAll(); return;
+      }
+      const d = await r.json();
+      if (d.payload && d.ts > lastTs) {
+        lastTs = d.ts;
+        try {
+          const txt = await aesDecrypt(d.payload, code);
+          document.getElementById('p-ta').value = txt;
+          cc('p-ta','p-cc');
+          notify('📥 Texte reçu !');
+        } catch(e) {}
+      }
+    } catch(e) {}
+  }, 1200);
+}
+
+async function peerSend() {
+  const txt = document.getElementById('p-send-ta').value.trim();
+  if (!txt) return;
+  const payload = await aesEncrypt(txt, code);
+  await fetch(`/api/message?code=${code}&from=peer`, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({payload})
+  });
+  document.getElementById('p-send-ta').value = '';
+  cc('p-send-ta','p-send-cc');
+  notify('✅ Texte envoyé !');
+}
+
+function pTyping() { cc('p-send-ta','p-send-cc'); }
+
+function leavePeer() { stopAll(); reset(); show('home'); }
+
+// ── TIMER ─────────────────────────────────────────────────────────────────────
+function startTimer(ms) {
+  timerStart = Date.now();
+  const bar = document.getElementById('h-timer-bar');
+  const txt = document.getElementById('h-timer-txt');
+  clearInterval(timerId);
+  function tick() {
+    const rem = Math.max(0, ms - (Date.now() - timerStart));
+    const pct = (rem / ms) * 100;
+    bar.style.width = pct + '%';
+    bar.className = 'timer-bar' + (pct < 15 ? ' crit' : pct < 40 ? ' warn' : '');
+    const s = Math.ceil(rem/1000), m = Math.floor(s/60);
+    txt.textContent = `Expire dans ${m}:${String(s%60).padStart(2,'0')}`;
+    if (rem <= 0) { clearInterval(timerId); closeHost(); }
+  }
+  tick(); timerId = setInterval(tick, 1000);
+}
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+function stopAll() { clearInterval(pollId); clearInterval(timerId); }
+
+function reset() {
+  code = null; role = null; lastTs = 0;
+  document.getElementById('h-ta').value = '';
+  document.getElementById('p-ta').value = '';
+  document.getElementById('p-send-ta').value = '';
+  document.getElementById('code-input').value = '';
+  document.getElementById('join-err').textContent = '';
+  document.getElementById('join-card').style.display = 'none';
+  document.getElementById('h-transfer').style.display = 'none';
+  setPill('h-pill','waiting','En attente de connexion…');
+}
+
+function setPill(id, cls, txt) {
+  const el = document.getElementById(id);
+  el.className = 'pill ' + cls;
+  el.innerHTML = `<span class="pd"></span><span>${txt}</span>`;
+}
+
+function cc(taId, ccId) {
+  document.getElementById(ccId).textContent = document.getElementById(taId).value.length.toLocaleString() + ' car.';
+}
+
+function copyTA(id) {
+  const v = document.getElementById(id).value;
+  if (!v) return notify('Rien à copier');
+  navigator.clipboard.writeText(v).then(() => notify('📋 Copié !'));
+}
+
+let ntTimer;
+function notify(msg) {
+  const el = document.getElementById('notif');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(ntTimer);
+  ntTimer = setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+function showTyping(id, msg) {
+  const el = document.getElementById(id);
+  el.textContent = msg;
+  setTimeout(() => { el.textContent = ''; }, 3000);
+}
+</script>
+</body>
+</html>

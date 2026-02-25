@@ -1,0 +1,11 @@
+{
+  "name": "cvme",
+  "version": "1.0.0",
+  "description": "Real-time clipboard sharing — copypaste.me clone",
+  "scripts": {
+    "dev": "vercel dev"
+  },
+  "devDependencies": {
+    "vercel": "^33.0.0"
+  }
+}
