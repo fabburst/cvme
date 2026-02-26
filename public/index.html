@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>C+V.me — Partage de texte instantané</title>
 <script>
-  // Anti-flash : applique le thème avant le premier rendu
   (function(){
     if (localStorage.getItem('cvme-theme') === 'light')
       document.documentElement.setAttribute('data-theme','light');
@@ -29,7 +28,6 @@
   --yellow: #EBCB8B;
   --text: #ECEFF4;
   --muted: #81A1C1;
-  --card-hover: #434C5E;
   --ghost-hover: #4C566A;
   --r: 14px;
 }
@@ -49,7 +47,6 @@
   --yellow: #957000;
   --text: #2E3440;
   --muted: #6D7A8E;
-  --card-hover: #DDD8CC;
   --ghost-hover: #D4CFC3;
 }
 
@@ -96,7 +93,7 @@ main { width: 100%; max-width: 480px; padding: 1.25rem 1rem 4rem; }
 .card {
   background: var(--card); border: 1px solid var(--border);
   border-radius: var(--r); padding: 1.4rem; margin-bottom: .75rem;
-  transition: background .25s, border-color .25s;
+  transition: background .25s, border-color .2s;
 }
 .card-center { text-align: center; }
 
@@ -109,9 +106,7 @@ main { width: 100%; max-width: 480px; padding: 1.25rem 1rem 4rem; }
 .qr-wrap img { display: block; width: 170px; height: 170px; }
 .qr-skeleton {
   width: 170px; height: 170px;
-  background: repeating-linear-gradient(
-    45deg, #eee 0px, #eee 2px, #fff 2px, #fff 8px
-  );
+  background: repeating-linear-gradient(45deg, #eee 0px, #eee 2px, #fff 2px, #fff 8px);
   border-radius: 4px;
   animation: shimmer 1.5s infinite;
 }
@@ -140,7 +135,7 @@ main { width: 100%; max-width: 480px; padding: 1.25rem 1rem 4rem; }
 .pill {
   display: inline-flex; align-items: center; gap: .35rem;
   padding: .28rem .75rem; border-radius: 99px;
-  font-size: .78rem; font-weight: 600; margin-bottom: .9rem;
+  font-size: .78rem; font-weight: 600;
 }
 .pill .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
 .pill.waiting  { background: rgba(235,203,139,.12); color: var(--yellow); border: 1px solid rgba(235,203,139,.25); }
@@ -162,10 +157,8 @@ main { width: 100%; max-width: 480px; padding: 1.25rem 1rem 4rem; }
 .btn-ghost { background: var(--card2); color: var(--text); border: 1px solid var(--border); }
 .btn-ghost:hover:not(:disabled) { background: var(--ghost-hover); }
 .btn-sm { width: auto; padding: .45rem .85rem; font-size: .8rem; }
-.btn-row { display: flex; gap: .5rem; flex-wrap: wrap; margin-top: .7rem; }
-.btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; }
 
-/* ── LINK COPY ROW ── */
+/* ── SHARE ROW ── */
 .share-row { display: flex; gap: .5rem; margin-top: .7rem; }
 .share-link {
   flex: 1; background: var(--card2); border: 1px solid var(--border); border-radius: 8px;
@@ -182,7 +175,7 @@ main { width: 100%; max-width: 480px; padding: 1.25rem 1rem 4rem; }
 
 /* ── TEXTAREA ── */
 textarea {
-  width: 100%; min-height: 120px;
+  width: 100%; min-height: 90px;
   background: var(--card2); border: 2px solid var(--border);
   border-radius: 10px; color: var(--text);
   font-size: .9rem; font-family: 'Courier New', monospace;
@@ -190,10 +183,8 @@ textarea {
   transition: border-color .18s, background .25s;
 }
 textarea:focus { border-color: var(--accent); }
-textarea[readonly] { opacity: .85; cursor: default; }
 .meta { display: flex; justify-content: space-between; align-items: center; margin-top: .35rem; }
 .cc { color: var(--muted); font-size: .72rem; }
-.clear-timer { color: var(--yellow); font-size: .72rem; }
 
 /* ── JOIN INPUT ── */
 .join-row { display: flex; gap: .55rem; margin-top: .7rem; }
@@ -207,13 +198,6 @@ textarea[readonly] { opacity: .85; cursor: default; }
 .code-input:focus { border-color: var(--accent); }
 .err { color: var(--red); font-size: .8rem; margin-top: .4rem; min-height: 1.1em; }
 
-/* ── DIVIDER ── */
-.divider {
-  display: flex; align-items: center; gap: .6rem;
-  color: var(--muted); font-size: .73rem; margin: .9rem 0;
-}
-.divider::before, .divider::after { content:''; flex:1; border-top: 1px solid var(--border); }
-
 /* ── NOTIF ── */
 .notif {
   position: fixed; bottom: 1.25rem; left: 50%;
@@ -226,6 +210,79 @@ textarea[readonly] { opacity: .85; cursor: default; }
 .notif.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
 footer { color: var(--muted); font-size: .7rem; padding: 1rem; text-align: center; }
+
+/* ── MESSAGE FEED ─────────────────────────────────────────────── */
+.msg-feed {
+  min-height: 80px;
+  max-height: 320px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: .45rem;
+  padding: .25rem 0 .75rem;
+  margin-bottom: .75rem;
+  border-bottom: 1px solid var(--border);
+  scroll-behavior: smooth;
+}
+.no-msgs {
+  color: var(--muted); font-size: .8rem;
+  text-align: center; padding: 1.5rem 0; font-style: italic;
+}
+.msg-bubble {
+  max-width: 90%; padding: .5rem .8rem;
+  border-radius: 12px; font-size: .87rem;
+  line-height: 1.5; word-break: break-word;
+  animation: fadeIn .2s ease;
+}
+.msg-bubble.sent {
+  align-self: flex-end;
+  background: rgba(94,129,172,.15);
+  border: 1px solid rgba(94,129,172,.28);
+}
+.msg-bubble.recv {
+  align-self: flex-start;
+  background: var(--card2);
+  border: 1px solid var(--border);
+}
+.msg-who {
+  font-size: .63rem; font-weight: 700; color: var(--muted);
+  margin-bottom: .18rem; text-transform: uppercase; letter-spacing: .05em;
+}
+.msg-text { white-space: pre-wrap; }
+.msg-text a { color: var(--accent2); text-decoration: underline; word-break: break-all; }
+.msg-footer {
+  display: flex; align-items: center; justify-content: flex-end;
+  gap: .4rem; margin-top: .3rem;
+}
+.msg-time { font-size: .63rem; color: var(--muted); opacity: .7; }
+.msg-copy {
+  background: none; border: none; cursor: pointer;
+  color: var(--muted); font-size: .78rem; padding: .1rem .28rem;
+  border-radius: 4px; transition: color .15s, background .15s; line-height: 1;
+}
+.msg-copy:hover { color: var(--text); background: var(--border); }
+.msg-file { display: flex; align-items: center; gap: .55rem; }
+.msg-file-icon { font-size: 1.4rem; flex-shrink: 0; }
+.msg-file-info { flex: 1; min-width: 0; }
+.msg-file-name { font-weight: 600; font-size: .85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.msg-file-size { font-size: .72rem; color: var(--muted); }
+
+/* ── COMPOSE ── */
+.compose-btns {
+  display: flex; gap: .45rem; margin-top: .5rem; align-items: stretch;
+}
+.compose-btns .btn-primary { flex: 1; }
+.compose-btns label.btn { cursor: pointer; flex-shrink: 0; }
+
+/* ── CONNECTED HEADER ── */
+.conn-header {
+  display: flex; justify-content: space-between;
+  align-items: center; margin-bottom: .85rem;
+}
+.connected-card.drag-over {
+  border-color: var(--accent) !important;
+  border-style: dashed !important;
+}
 </style>
 </head>
 <body>
@@ -238,12 +295,11 @@ footer { color: var(--muted); font-size: .7rem; padding: 1rem; text-align: cente
 
 <main>
 
-  <!-- ── ÉCRAN ACCUEIL (QR + rejoindre) ───────────────────────────── -->
+  <!-- ── ÉCRAN ACCUEIL ───────────────────────────────────────────────── -->
   <div class="screen active" id="s-home">
 
-    <!-- QR + code -->
     <div class="card card-center">
-      <div id="h-pill" class="pill waiting">
+      <div id="h-pill" class="pill waiting" style="margin-bottom:.9rem">
         <span class="dot"></span><span>En attente de l'autre appareil…</span>
       </div>
 
@@ -264,11 +320,10 @@ footer { color: var(--muted); font-size: .7rem; padding: 1rem; text-align: cente
 
       <div class="share-row">
         <div class="share-link" id="share-link">—</div>
-        <button class="btn btn-ghost btn-sm" onclick="copyLink()">🔗 Copier le lien</button>
+        <button class="btn btn-ghost btn-sm" onclick="shareLink()">🔗 Partager</button>
       </div>
     </div>
 
-    <!-- Rejoindre un autre appareil -->
     <div class="card">
       <div class="slabel">Rejoindre un autre appareil</div>
       <div class="join-row">
@@ -281,46 +336,51 @@ footer { color: var(--muted); font-size: .7rem; padding: 1rem; text-align: cente
 
   </div>
 
-  <!-- ── ÉCRAN CONNECTÉ (bilatéral) ───────────────────────────────── -->
+  <!-- ── ÉCRAN CONNECTÉ ─────────────────────────────────────────────── -->
   <div class="screen" id="s-connected">
+    <div class="card connected-card" id="connected-card"
+      ondragover="handleDragOver(event)" ondrop="handleDrop(event)" ondragleave="handleDragLeave(event)">
 
-    <!-- Cet appareil -->
-    <div class="card">
-      <div id="c-pill" class="pill connected">
-        <span class="dot"></span><span>Connecté</span>
+      <!-- En-tête -->
+      <div class="conn-header">
+        <div id="c-pill" class="pill connected">
+          <span class="dot"></span><span>Connecté</span>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="leaveSession()">✕ Quitter</button>
       </div>
-      <div class="slabel">Cet appareil</div>
-      <textarea id="my-ta" placeholder="Tapez votre texte ici…" oninput="myCount()"></textarea>
-      <div class="meta">
-        <span class="cc" id="my-cc">0 car.</span>
+
+      <!-- Fil de messages -->
+      <div class="msg-feed" id="msg-feed">
+        <div class="no-msgs" id="no-msgs">Aucun message — envoyez du texte ou déposez un fichier ici</div>
       </div>
-      <div class="btn-grid" style="margin-top:.7rem">
-        <button class="btn btn-primary" onclick="sendText()">🚀 Envoyer</button>
-        <button class="btn btn-ghost" onclick="copyTA('my-ta')">📋 Copier</button>
+
+      <!-- Zone de rédaction -->
+      <div>
+        <div class="slabel">Message</div>
+        <textarea id="my-ta" placeholder="Tapez votre message… (Ctrl+Entrée pour envoyer)"
+          oninput="myCount()" onkeydown="handleKey(event)"></textarea>
+        <div class="meta">
+          <span class="cc" id="my-cc"></span>
+          <span style="font-size:.68rem;color:var(--muted)">Ctrl+Entrée pour envoyer</span>
+        </div>
+        <div class="compose-btns">
+          <label class="btn btn-ghost btn-sm" title="Joindre un fichier (max 2 Mo)">
+            📁
+            <input type="file" id="file-input" style="display:none"
+              onchange="handleFileSelect(event)" multiple/>
+          </label>
+          <button class="btn btn-ghost btn-sm" onclick="pasteFromClipboard()"
+            title="Coller depuis le presse-papier">📋 Coller</button>
+          <button class="btn btn-primary" onclick="sendText()">🚀 Envoyer</button>
+        </div>
       </div>
+
     </div>
-
-    <!-- L'autre appareil -->
-    <div class="card">
-      <div class="slabel">L'autre appareil</div>
-      <textarea id="other-ta" readonly placeholder="En attente du texte…"></textarea>
-      <div class="meta">
-        <span class="cc" id="other-cc">0 car.</span>
-        <span class="clear-timer" id="clear-timer"></span>
-      </div>
-      <div class="btn-grid" style="margin-top:.7rem">
-        <button class="btn btn-primary" onclick="copyTA('other-ta')">📋 Copier</button>
-        <button class="btn btn-ghost" onclick="clearOther()">🗑 Effacer</button>
-      </div>
-    </div>
-
-    <button class="btn btn-ghost" onclick="leaveSession()" style="margin-top:.1rem">✕ Quitter la session</button>
-
   </div>
 
 </main>
 
-<footer>Aucune donnée stockée · Open source</footer>
+<footer>Aucune donnée stockée · Chiffrement E2E · Open source</footer>
 <div class="notif" id="notif"></div>
 
 <script>
@@ -334,7 +394,6 @@ function applyTheme(t) {
 function toggleTheme() {
   applyTheme(document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light');
 }
-// Sync button icon on load (attribute already set by <head> script)
 applyTheme(localStorage.getItem('cvme-theme') || 'dark');
 
 // ── CRYPTO ────────────────────────────────────────────────────────────────────
@@ -363,9 +422,9 @@ async function aesDecrypt(b64, c) {
 }
 
 // ── STATE ─────────────────────────────────────────────────────────────────────
-let code = null, role = null, pollId = null, timerId = null, clearTimerId = null, lastTs = 0;
+let code = null, role = null, pollId = null, timerId = null, lastTs = 0;
 const TTL = 10 * 60 * 1000;
-const CLEAR_DELAY = 2 * 60 * 1000; // auto-clear reçu après 2 min
+const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2 Mo
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
 (async function init() {
@@ -379,11 +438,10 @@ const CLEAR_DELAY = 2 * 60 * 1000; // auto-clear reçu après 2 min
   }
 })();
 
-// ── CRÉER UNE SESSION (rôle : host) ──────────────────────────────────────────
+// ── CRÉER UNE SESSION (host) ──────────────────────────────────────────────────
 async function createSession() {
   stopAll(); resetState();
   try {
-    // POST /api/message sans code → création de session (même Lambda = même store)
     const data = await fetch('/api/message', {method:'POST'}).then(r => r.json());
     code = data.code; role = 'host'; lastTs = 0;
 
@@ -391,7 +449,6 @@ async function createSession() {
     const joinUrl = `${window.location.origin}/?join=${code}`;
     document.getElementById('share-link').textContent = joinUrl;
 
-    // QR code via api.qrserver.com (ne nécessite pas de clé API)
     const img = document.getElementById('qr-img');
     img.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=12&bgcolor=ffffff&color=000000&data=${encodeURIComponent(joinUrl)}`;
 
@@ -408,10 +465,9 @@ function qrLoaded() {
   document.getElementById('qr-img').style.display = 'block';
 }
 
-// ── REJOINDRE AUTO (rôle : peer, via URL ?join=) ──────────────────────────────
+// ── REJOINDRE AUTO (peer, via URL ?join=) ─────────────────────────────────────
 async function autoJoin(c) {
   try {
-    // GET /api/message?code=X sans from → vérification d'existence (même Lambda)
     const r = await fetch(`/api/message?code=${c}`);
     if (!r.ok) { notify('❌ Code invalide ou expiré'); await createSession(); return; }
     code = c; role = 'peer'; lastTs = 0;
@@ -438,28 +494,24 @@ async function manualJoin() {
 
 // ── POLL HOST ─────────────────────────────────────────────────────────────────
 function pollHost() {
-  let errCount = 0;
   pollId = setInterval(async () => {
     try {
       const r = await fetch(`/api/message?code=${code}&from=host&since=${lastTs}`);
       if (!r.ok) {
-        // 404 = session expirée (le timer gère la recréation)
-        // Ne pas recréer immédiatement → évite la boucle de reset
         if (r.status === 404) { clearInterval(pollId); notify('⏰ Session expirée'); }
         return;
       }
-      errCount = 0;
       const d = await r.json();
-      // Peer vient de se connecter → passer à l'écran connecté
       if (d.peerConnected && !document.getElementById('s-connected').classList.contains('active')) {
         showConnected();
       }
-      // Message reçu de l'autre appareil
-      if (d.payload && d.ts > lastTs) {
-        lastTs = d.ts;
-        try { receiveText(await aesDecrypt(d.payload, code)); } catch(e) {}
+      if (d.messages && d.messages.length > 0) {
+        for (const msg of d.messages) {
+          if (msg.ts > lastTs) lastTs = msg.ts;
+          await receiveMessage(msg);
+        }
       }
-    } catch(e) { errCount++; }
+    } catch(e) {}
   }, 1200);
 }
 
@@ -469,80 +521,238 @@ function pollPeer() {
     try {
       const r = await fetch(`/api/message?code=${code}&from=peer&since=${lastTs}`);
       if (!r.ok) {
-        setPill('c-pill','error','Session fermée par l\'hôte');
+        setPill('c-pill','error','Session fermée');
         stopAll(); setTimeout(createSession, 2000); return;
       }
       const d = await r.json();
-      if (d.payload && d.ts > lastTs) {
-        lastTs = d.ts;
-        try { receiveText(await aesDecrypt(d.payload, code)); } catch(e) {}
+      if (d.messages && d.messages.length > 0) {
+        for (const msg of d.messages) {
+          if (msg.ts > lastTs) lastTs = msg.ts;
+          await receiveMessage(msg);
+        }
       }
     } catch(e) {}
   }, 1200);
 }
 
-// ── RECEVOIR DU TEXTE ─────────────────────────────────────────────────────────
-function receiveText(txt) {
-  document.getElementById('other-ta').value = txt;
-  updateCC('other-ta','other-cc');
-  notify('📥 Texte reçu !');
-  // Auto-clear après 2 minutes (comme CopyPaste.me)
-  startClearTimer();
-}
-
-function startClearTimer() {
-  clearTimeout(clearTimerId);
-  const el = document.getElementById('clear-timer');
-  const start = Date.now();
-  function tick() {
-    const rem = Math.max(0, CLEAR_DELAY - (Date.now() - start));
-    if (rem === 0) {
-      el.textContent = '';
-      document.getElementById('other-ta').value = '';
-      updateCC('other-ta','other-cc');
-      return;
+// ── RECEVOIR UN MESSAGE ───────────────────────────────────────────────────────
+async function receiveMessage(msg) {
+  try {
+    const decrypted = await aesDecrypt(msg.payload, code);
+    if (msg.type === 'file') {
+      const meta = JSON.parse(decrypted);
+      addMessage('recv', { type: 'file', name: meta.name, size: meta.size, mime: meta.mime, data: meta.data, ts: msg.ts });
+    } else {
+      addMessage('recv', { type: 'text', text: decrypted, ts: msg.ts });
     }
-    const s = Math.ceil(rem / 1000), m = Math.floor(s / 60);
-    el.textContent = `Efface dans ${m}:${String(s % 60).padStart(2,'0')}`;
-    clearTimerId = setTimeout(tick, 1000);
-  }
-  tick();
+    notify('📥 Message reçu !');
+  } catch(e) {}
 }
 
-function clearOther() {
-  clearTimeout(clearTimerId);
-  document.getElementById('other-ta').value = '';
-  document.getElementById('clear-timer').textContent = '';
-  updateCC('other-ta','other-cc');
+// ── AJOUTER UN MESSAGE DANS LE FIL ───────────────────────────────────────────
+function addMessage(dir, data) {
+  const feed = document.getElementById('msg-feed');
+  const noMsgs = document.getElementById('no-msgs');
+  if (noMsgs) noMsgs.remove();
+
+  const bubble = document.createElement('div');
+  bubble.className = `msg-bubble ${dir === 'sent' ? 'sent' : 'recv'}`;
+
+  // Expéditeur
+  const who = document.createElement('div');
+  who.className = 'msg-who';
+  who.textContent = dir === 'sent' ? 'Vous' : 'Eux';
+  bubble.appendChild(who);
+
+  // Contenu
+  if (data.type === 'file') {
+    const row = document.createElement('div');
+    row.className = 'msg-file';
+
+    const icon = document.createElement('span');
+    icon.className = 'msg-file-icon';
+    icon.textContent = fileIcon(data.mime || '');
+
+    const info = document.createElement('div');
+    info.className = 'msg-file-info';
+    const nameEl = document.createElement('div');
+    nameEl.className = 'msg-file-name';
+    nameEl.title = data.name;
+    nameEl.textContent = data.name;
+    const sizeEl = document.createElement('div');
+    sizeEl.className = 'msg-file-size';
+    sizeEl.textContent = fmtSize(data.size);
+    info.appendChild(nameEl);
+    info.appendChild(sizeEl);
+
+    const dl = document.createElement('button');
+    dl.className = 'btn btn-ghost btn-sm';
+    dl.textContent = '↓';
+    dl.title = 'Télécharger';
+    dl.onclick = () => downloadFile(data);
+
+    row.appendChild(icon); row.appendChild(info); row.appendChild(dl);
+    bubble.appendChild(row);
+  } else {
+    const content = document.createElement('div');
+    content.className = 'msg-text';
+    content.innerHTML = linkify(escHtml(data.text));
+    bubble.appendChild(content);
+  }
+
+  // Pied : heure + bouton copier (texte reçu)
+  const footer = document.createElement('div');
+  footer.className = 'msg-footer';
+
+  if (dir === 'recv' && data.type === 'text') {
+    const copyBtn = document.createElement('button');
+    copyBtn.className = 'msg-copy';
+    copyBtn.title = 'Copier le texte';
+    copyBtn.textContent = '📋';
+    copyBtn.onclick = () => navigator.clipboard.writeText(data.text).then(() => notify('📋 Copié !'));
+    footer.appendChild(copyBtn);
+  }
+
+  const time = document.createElement('span');
+  time.className = 'msg-time';
+  time.textContent = fmtTime(data.ts || Date.now());
+  footer.appendChild(time);
+
+  bubble.appendChild(footer);
+  feed.appendChild(bubble);
+  feed.scrollTop = feed.scrollHeight;
 }
 
 // ── ENVOYER DU TEXTE ──────────────────────────────────────────────────────────
 async function sendText() {
-  const txt = document.getElementById('my-ta').value.trim();
+  const ta = document.getElementById('my-ta');
+  const txt = ta.value.trim();
   if (!txt) return;
   try {
     const payload = await aesEncrypt(txt, code);
     await fetch(`/api/message?code=${code}&from=${role}`, {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({payload})
+      body: JSON.stringify({ payload, type: 'text' })
     });
+    addMessage('sent', { type: 'text', text: txt, ts: Date.now() });
+    ta.value = ''; myCount();
     notify('✅ Envoyé !');
   } catch(e) { notify('❌ Erreur d\'envoi'); }
 }
 
-// ── COPIER ────────────────────────────────────────────────────────────────────
-function copyTA(id) {
-  const v = document.getElementById(id).value;
-  if (!v) { notify('Rien à copier'); return; }
-  navigator.clipboard.writeText(v).then(() => notify('📋 Copié !'));
+// ── ENVOYER UN FICHIER ────────────────────────────────────────────────────────
+async function sendFile(file) {
+  if (file.size > MAX_FILE_SIZE) {
+    notify(`❌ Fichier trop grand (max ${fmtSize(MAX_FILE_SIZE)})`);
+    return;
+  }
+  notify('⏳ Chiffrement et envoi…');
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    try {
+      const b64 = e.target.result.split(',')[1];
+      const meta = JSON.stringify({
+        name: file.name,
+        size: file.size,
+        mime: file.type || 'application/octet-stream',
+        data: b64
+      });
+      const payload = await aesEncrypt(meta, code);
+      await fetch(`/api/message?code=${code}&from=${role}`, {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ payload, type: 'file' })
+      });
+      addMessage('sent', { type: 'file', name: file.name, size: file.size, mime: file.type, data: b64, ts: Date.now() });
+      notify('✅ Fichier envoyé !');
+    } catch(e) { notify('❌ Erreur d\'envoi du fichier'); }
+  };
+  reader.onerror = () => notify('❌ Erreur de lecture du fichier');
+  reader.readAsDataURL(file);
 }
 
-function copyLink() {
+// ── SÉLECTION FICHIER / DRAG & DROP ──────────────────────────────────────────
+function handleFileSelect(e) {
+  for (const f of e.target.files) sendFile(f);
+  e.target.value = '';
+}
+function handleDragOver(e) {
+  e.preventDefault();
+  document.getElementById('connected-card').classList.add('drag-over');
+}
+function handleDragLeave(e) {
+  document.getElementById('connected-card').classList.remove('drag-over');
+}
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('connected-card').classList.remove('drag-over');
+  for (const f of e.dataTransfer.files) sendFile(f);
+}
+
+// ── COLLER DEPUIS LE PRESSE-PAPIER ────────────────────────────────────────────
+async function pasteFromClipboard() {
+  // Essai enrichi (images incluses) via clipboard.read()
+  if (navigator.clipboard.read) {
+    try {
+      const items = await navigator.clipboard.read();
+      for (const item of items) {
+        for (const type of item.types) {
+          if (type.startsWith('image/')) {
+            const blob = await item.getType(type);
+            const ext  = type.split('/')[1] || 'png';
+            sendFile(new File([blob], `image_collée.${ext}`, { type }));
+            return;
+          }
+        }
+      }
+    } catch(e) { /* permission refusée ou API indisponible → on passe au fallback */ }
+  }
+  // Fallback texte
+  try {
+    const text = await navigator.clipboard.readText();
+    const ta = document.getElementById('my-ta');
+    ta.value = ta.value ? ta.value + '\n' + text : text;
+    myCount(); ta.focus();
+  } catch(e) {
+    notify('❌ Accès presse-papier refusé');
+  }
+}
+
+// ── PARTAGER LE LIEN (Web Share API → clipboard) ──────────────────────────────
+async function shareLink() {
   const link = document.getElementById('share-link').textContent;
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: 'C+V.me — Rejoins ma session',
+        text: `Code de partage : ${code}`,
+        url: link
+      });
+      return;
+    } catch(e) {
+      if (e.name === 'AbortError') return; // annulé par l'utilisateur
+    }
+  }
   navigator.clipboard.writeText(link).then(() => notify('🔗 Lien copié !'));
 }
 
-// ── QUITTER ───────────────────────────────────────────────────────────────────
+// ── TÉLÉCHARGER UN FICHIER REÇU ───────────────────────────────────────────────
+function downloadFile(data) {
+  try {
+    const bytes = Uint8Array.from(atob(data.data), c => c.charCodeAt(0));
+    const blob  = new Blob([bytes], { type: data.mime || 'application/octet-stream' });
+    const url   = URL.createObjectURL(blob);
+    const a     = document.createElement('a');
+    a.href = url; a.download = data.name; a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+  } catch(e) { notify('❌ Erreur de téléchargement'); }
+}
+
+// ── RACCOURCI CLAVIER ────────────────────────────────────────────────────────
+function handleKey(e) {
+  if (e.key === 'Enter' && e.ctrlKey) { e.preventDefault(); sendText(); }
+}
+
+// ── QUITTER LA SESSION ────────────────────────────────────────────────────────
 async function leaveSession() {
   stopAll();
   if (code && role === 'host') {
@@ -582,19 +792,21 @@ function showConnected() {
 
 // ── HELPERS ───────────────────────────────────────────────────────────────────
 function stopAll() {
-  clearInterval(pollId); clearInterval(timerId); clearTimeout(clearTimerId);
-  pollId = timerId = clearTimerId = null;
+  clearInterval(pollId); clearInterval(timerId);
+  pollId = timerId = null;
 }
 
 function resetState() {
   code = null; role = null; lastTs = 0;
-  ['my-ta','other-ta'].forEach(id => { document.getElementById(id).value = ''; });
-  ['my-cc','other-cc','clear-timer'].forEach(id => { document.getElementById(id).textContent = ''; });
-  ['join-input'].forEach(id => { document.getElementById(id).value = ''; });
+  document.getElementById('my-ta').value = '';
+  document.getElementById('my-cc').textContent = '';
+  document.getElementById('join-input').value = '';
   document.getElementById('join-err').textContent = '';
   document.getElementById('qr-skeleton').style.display = 'block';
-  document.getElementById('qr-img').style.display     = 'none';
+  document.getElementById('qr-img').style.display = 'none';
   setPill('h-pill','waiting','En attente de l\'autre appareil…');
+  document.getElementById('msg-feed').innerHTML =
+    '<div class="no-msgs" id="no-msgs">Aucun message — envoyez du texte ou déposez un fichier ici</div>';
 }
 
 function setPill(id, cls, txt) {
@@ -603,18 +815,53 @@ function setPill(id, cls, txt) {
   el.innerHTML = `<span class="dot"></span><span>${txt}</span>`;
 }
 
-function updateCC(taId, ccId) {
-  const n = document.getElementById(taId).value.length;
-  document.getElementById(ccId).textContent = n ? n.toLocaleString() + ' car.' : '';
+function myCount() {
+  const n = document.getElementById('my-ta').value.length;
+  document.getElementById('my-cc').textContent = n ? n.toLocaleString() + ' car.' : '';
 }
-
-function myCount() { updateCC('my-ta','my-cc'); }
 
 function fmtJoin() {
   const el = document.getElementById('join-input');
   let v = el.value.toUpperCase().replace(/[^A-Z0-9]/g,'');
   if (v.length > 3) v = v.slice(0,3) + '-' + v.slice(3,6);
   el.value = v;
+}
+
+function fmtTime(ts) {
+  return new Date(ts).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+}
+
+function fmtSize(bytes) {
+  if (bytes < 1024) return bytes + ' o';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' Ko';
+  return (bytes / (1024 * 1024)).toFixed(1) + ' Mo';
+}
+
+function fileIcon(mime) {
+  if (mime.startsWith('image/')) return '🖼️';
+  if (mime.startsWith('video/')) return '🎬';
+  if (mime.startsWith('audio/')) return '🎵';
+  if (mime.includes('pdf')) return '📄';
+  if (mime.match(/zip|tar|gz|rar|7z/)) return '🗜️';
+  if (mime.match(/word|docx?/)) return '📝';
+  if (mime.match(/sheet|xlsx?|csv/)) return '📊';
+  if (mime.match(/html|css|javascript|json|xml|text\//)) return '💻';
+  return '📁';
+}
+
+function escHtml(s) {
+  return s
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
+}
+
+function linkify(html) {
+  return html.replace(
+    /(https?:\/\/[^\s<>"&]+)/g,
+    '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>'
+  );
 }
 
 let ntTimer;
