@@ -313,7 +313,9 @@ async function aesEncrypt(text, code) {
   const ct = await crypto.subtle.encrypt({name:'AES-GCM',iv}, key, new TextEncoder().encode(text));
   const buf = new Uint8Array(12 + ct.byteLength);
   buf.set(iv); buf.set(new Uint8Array(ct), 12);
-  return btoa(String.fromCharCode(...buf));
+  let binary = '';
+  for (let i = 0; i < buf.length; i++) binary += String.fromCharCode(buf[i]);
+  return btoa(binary);
 }
 async function aesDecrypt(b64, code) {
   const key = await getKey(code);
@@ -381,7 +383,7 @@ function pollHost() {
         try {
           const txt = await aesDecrypt(d.payload, code);
           const ta = document.getElementById('h-ta');
-          if (!ta.value) { ta.value = txt; cc('h-ta','h-cc'); }
+          ta.value = txt; cc('h-ta','h-cc');
           showTyping('p-typing', "L'autre appareil a envoyé du texte");
           notify('📥 Texte reçu en retour !');
         } catch(e) {}

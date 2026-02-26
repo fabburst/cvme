@@ -36,7 +36,7 @@ module.exports = (req, res) => {
         // Messages stored per direction: host->peer and peer->host
         const key = from === 'host' ? 'forPeer' : 'forHost';
         session[key] = { payload, ts: Date.now() };
-        session.peerConnected = true;
+        if (from === 'peer') session.peerConnected = true;
         res.json({ ok: true });
       } catch(e) {
         res.status(400).json({ error: 'bad json' });
