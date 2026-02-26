@@ -383,7 +383,8 @@ const CLEAR_DELAY = 2 * 60 * 1000; // auto-clear reçu après 2 min
 async function createSession() {
   stopAll(); resetState();
   try {
-    const data = await fetch('/api/session', {method:'POST'}).then(r => r.json());
+    // POST /api/message sans code → création de session (même Lambda = même store)
+    const data = await fetch('/api/message', {method:'POST'}).then(r => r.json());
     code = data.code; role = 'host'; lastTs = 0;
 
     document.getElementById('h-code').textContent = code;
@@ -410,7 +411,8 @@ function qrLoaded() {
 // ── REJOINDRE AUTO (rôle : peer, via URL ?join=) ──────────────────────────────
 async function autoJoin(c) {
   try {
-    const r = await fetch(`/api/session?code=${c}`);
+    // GET /api/message?code=X sans from → vérification d'existence (même Lambda)
+    const r = await fetch(`/api/message?code=${c}`);
     if (!r.ok) { notify('❌ Code invalide ou expiré'); await createSession(); return; }
     code = c; role = 'peer'; lastTs = 0;
     showConnected();
@@ -436,10 +438,17 @@ async function manualJoin() {
 
 // ── POLL HOST ─────────────────────────────────────────────────────────────────
 function pollHost() {
+  let errCount = 0;
   pollId = setInterval(async () => {
     try {
       const r = await fetch(`/api/message?code=${code}&from=host&since=${lastTs}`);
-      if (!r.ok) { stopAll(); createSession(); return; }
+      if (!r.ok) {
+        // 404 = session expirée (le timer gère la recréation)
+        // Ne pas recréer immédiatement → évite la boucle de reset
+        if (r.status === 404) { clearInterval(pollId); notify('⏰ Session expirée'); }
+        return;
+      }
+      errCount = 0;
       const d = await r.json();
       // Peer vient de se connecter → passer à l'écran connecté
       if (d.peerConnected && !document.getElementById('s-connected').classList.contains('active')) {
@@ -450,7 +459,7 @@ function pollHost() {
         lastTs = d.ts;
         try { receiveText(await aesDecrypt(d.payload, code)); } catch(e) {}
       }
-    } catch(e) {}
+    } catch(e) { errCount++; }
   }, 1200);
 }
 
