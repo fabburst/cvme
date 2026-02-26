@@ -4,6 +4,13 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>C+V.me — Partage de texte instantané</title>
+<script>
+  // Anti-flash : applique le thème avant le premier rendu
+  (function(){
+    if (localStorage.getItem('cvme-theme') === 'light')
+      document.documentElement.setAttribute('data-theme','light');
+  })();
+</script>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -54,192 +61,171 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  transition: background 0.25s, color 0.25s;
+  transition: background .25s, color .25s;
 }
 
-/* HEADER */
+/* ── HEADER ── */
 header {
   position: relative;
-  text-align: center;
-  padding: 2.5rem 1rem 1rem;
   width: 100%;
+  text-align: center;
+  padding: 2.2rem 1rem 0.5rem;
 }
 .logo {
-  font-size: 2rem;
-  font-weight: 900;
+  font-size: 1.9rem; font-weight: 900;
   background: linear-gradient(135deg, var(--accent), var(--accent2));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
 }
-.tagline { color: var(--muted); font-size: 0.85rem; margin-top: 0.35rem; }
-
-/* THEME TOGGLE */
+.tagline { color: var(--muted); font-size: 0.82rem; margin-top: 0.3rem; }
 .theme-toggle {
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 50%;
-  width: 38px;
-  height: 38px;
-  cursor: pointer;
-  font-size: 1.1rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: border-color 0.18s, transform 0.18s, background 0.25s;
-  line-height: 1;
+  position: absolute; top: 1rem; right: 1rem;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 50%; width: 38px; height: 38px; cursor: pointer;
+  font-size: 1.1rem; display: flex; align-items: center; justify-content: center;
+  transition: border-color .18s, transform .18s, background .25s;
 }
 .theme-toggle:hover { border-color: var(--accent); transform: scale(1.1); }
 
-/* MAIN */
-main {
-  width: 100%;
-  max-width: 500px;
-  padding: 1.5rem 1rem 4rem;
-}
-
-/* SCREENS */
+/* ── MAIN ── */
+main { width: 100%; max-width: 480px; padding: 1.25rem 1rem 4rem; }
 .screen { display: none; }
-.screen.active { display: block; animation: fadeIn 0.25s ease; }
+.screen.active { display: block; animation: fadeIn .25s ease; }
 @keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:none; } }
 
-/* CARD */
+/* ── CARD ── */
 .card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--r);
-  padding: 1.5rem;
-  margin-bottom: 0.75rem;
-  transition: background 0.25s, border-color 0.25s;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--r); padding: 1.4rem; margin-bottom: .75rem;
+  transition: background .25s, border-color .25s;
 }
-.card-title { font-weight: 700; font-size: 1rem; margin-bottom: 0.9rem; }
+.card-center { text-align: center; }
 
-/* HOME GRID */
-.home-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.75rem; }
-.choice-btn {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 1.4rem 0.75rem;
-  background: var(--card);
-  border: 2px solid var(--border);
-  border-radius: var(--r);
-  color: var(--text);
-  cursor: pointer;
-  font-size: 0.88rem;
-  font-weight: 600;
-  transition: all 0.18s;
+/* ── QR ── */
+.qr-wrap {
+  background: #fff; border-radius: 12px; padding: 10px;
+  display: inline-flex; margin: .6rem 0 .5rem;
+  box-shadow: 0 2px 16px rgba(0,0,0,.15);
 }
-.choice-btn:hover { border-color: var(--accent); background: var(--card-hover); box-shadow: 0 0 24px var(--accent-glow); transform: translateY(-2px); }
-.choice-btn .icon { font-size: 1.8rem; }
-.choice-btn small { color: var(--muted); font-weight: 400; font-size: 0.75rem; text-align: center; line-height: 1.3; }
+.qr-wrap img { display: block; width: 170px; height: 170px; }
+.qr-skeleton {
+  width: 170px; height: 170px;
+  background: repeating-linear-gradient(
+    45deg, #eee 0px, #eee 2px, #fff 2px, #fff 8px
+  );
+  border-radius: 4px;
+  animation: shimmer 1.5s infinite;
+}
+@keyframes shimmer { 0%,100%{opacity:.6} 50%{opacity:1} }
+.qr-caption { color: var(--muted); font-size: .8rem; margin-bottom: .75rem; }
 
-/* BUTTONS */
+/* ── CODE DISPLAY ── */
+.code-box {
+  background: var(--card2); border-radius: 10px;
+  padding: .9rem 1.2rem; margin: .75rem 0;
+}
+.code-box .lbl { color: var(--muted); font-size: .72rem; margin-bottom: .25rem; letter-spacing: .03em; }
+.code-val {
+  font-size: 2rem; font-weight: 900; letter-spacing: .22em;
+  color: var(--accent2); font-family: 'Courier New', monospace;
+}
+
+/* ── TIMER ── */
+.timer-wrap { background: var(--border); border-radius: 99px; height: 3px; overflow: hidden; margin: .75rem 0 .25rem; }
+.timer-bar { height: 100%; background: var(--accent); border-radius: 99px; transition: width 1s linear, background 1s; }
+.timer-bar.warn { background: var(--yellow); }
+.timer-bar.crit { background: var(--red); }
+.timer-txt { color: var(--muted); font-size: .72rem; text-align: center; }
+
+/* ── PILL ── */
+.pill {
+  display: inline-flex; align-items: center; gap: .35rem;
+  padding: .28rem .75rem; border-radius: 99px;
+  font-size: .78rem; font-weight: 600; margin-bottom: .9rem;
+}
+.pill .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.pill.waiting  { background: rgba(235,203,139,.12); color: var(--yellow); border: 1px solid rgba(235,203,139,.25); }
+.pill.waiting .dot { animation: blink 1.2s infinite; }
+.pill.connected { background: rgba(163,190,140,.12); color: var(--green);  border: 1px solid rgba(163,190,140,.25); }
+.pill.error    { background: rgba(191,97,106,.12);  color: var(--red);    border: 1px solid rgba(191,97,106,.25); }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.2} }
+
+/* ── BUTTONS ── */
 .btn {
-  display: flex; align-items: center; justify-content: center; gap: 0.45rem;
-  padding: 0.8rem 1.25rem; border-radius: 10px;
-  font-size: 0.92rem; font-weight: 600; cursor: pointer; border: none;
-  transition: all 0.18s; width: 100%;
+  display: flex; align-items: center; justify-content: center; gap: .45rem;
+  padding: .75rem 1.2rem; border-radius: 10px;
+  font-size: .9rem; font-weight: 600; cursor: pointer; border: none;
+  transition: all .18s; width: 100%;
 }
-.btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none !important; }
+.btn:disabled { opacity: .4; cursor: not-allowed; transform: none !important; }
 .btn-primary { background: var(--accent); color: #fff; }
 .btn-primary:hover:not(:disabled) { background: var(--accent-h); transform: translateY(-1px); box-shadow: 0 4px 18px var(--accent-glow); }
 .btn-ghost { background: var(--card2); color: var(--text); border: 1px solid var(--border); }
 .btn-ghost:hover:not(:disabled) { background: var(--ghost-hover); }
-.btn-sm { width: auto; padding: 0.5rem 0.9rem; font-size: 0.82rem; }
-.btn-row { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.75rem; }
+.btn-sm { width: auto; padding: .45rem .85rem; font-size: .8rem; }
+.btn-row { display: flex; gap: .5rem; flex-wrap: wrap; margin-top: .7rem; }
+.btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; }
 
-/* CODE DISPLAY */
-.code-box {
-  background: var(--card2);
-  border-radius: 10px;
-  padding: 1.25rem;
-  text-align: center;
-  margin: 1rem 0;
+/* ── LINK COPY ROW ── */
+.share-row { display: flex; gap: .5rem; margin-top: .7rem; }
+.share-link {
+  flex: 1; background: var(--card2); border: 1px solid var(--border); border-radius: 8px;
+  color: var(--muted); font-size: .78rem; padding: .5rem .7rem;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  font-family: 'Courier New', monospace; display: flex; align-items: center;
 }
-.code-box .lbl { color: var(--muted); font-size: 0.78rem; margin-bottom: 0.4rem; }
-.code-val {
-  font-size: 2.6rem; font-weight: 900;
-  letter-spacing: 0.2em; color: var(--accent2);
-  font-family: 'Courier New', monospace;
+
+/* ── SECTION LABEL ── */
+.slabel {
+  font-size: .7rem; font-weight: 700; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--muted); margin-bottom: .55rem;
 }
-.code-box .sub { color: var(--muted); font-size: 0.75rem; margin-top: 0.35rem; }
 
-/* TIMER */
-.timer-wrap { background: var(--border); border-radius: 99px; height: 3px; overflow: hidden; margin: 0.6rem 0 0.3rem; }
-.timer-bar { height: 100%; background: var(--accent); border-radius: 99px; transition: width 1s linear, background 1s; }
-.timer-bar.warn { background: var(--yellow); }
-.timer-bar.crit { background: var(--red); }
-.timer-txt { color: var(--muted); font-size: 0.75rem; text-align: center; }
-
-/* STATUS PILL */
-.pill {
-  display: inline-flex; align-items: center; gap: 0.35rem;
-  padding: 0.28rem 0.75rem; border-radius: 99px;
-  font-size: 0.78rem; font-weight: 600; margin-bottom: 1rem;
-}
-.pill .pd { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
-.pill.waiting { background: rgba(235,203,139,.12); color: var(--yellow); border: 1px solid rgba(235,203,139,.25); }
-.pill.waiting .pd { animation: blink 1.2s infinite; }
-.pill.connected { background: rgba(163,190,140,.12); color: var(--green); border: 1px solid rgba(163,190,140,.25); }
-.pill.error { background: rgba(191,97,106,.12); color: var(--red); border: 1px solid rgba(191,97,106,.25); }
-@keyframes blink { 0%,100%{opacity:1}50%{opacity:.2} }
-
-/* TEXTAREA */
+/* ── TEXTAREA ── */
 textarea {
-  width: 100%; min-height: 160px;
+  width: 100%; min-height: 120px;
   background: var(--card2); border: 2px solid var(--border);
   border-radius: 10px; color: var(--text);
-  font-size: 0.92rem; font-family: 'Courier New', monospace;
-  padding: 0.8rem; resize: vertical; outline: none;
-  transition: border-color 0.18s, background 0.25s;
+  font-size: .9rem; font-family: 'Courier New', monospace;
+  padding: .75rem; resize: vertical; outline: none;
+  transition: border-color .18s, background .25s;
 }
 textarea:focus { border-color: var(--accent); }
-textarea[readonly] { opacity: 0.8; }
+textarea[readonly] { opacity: .85; cursor: default; }
+.meta { display: flex; justify-content: space-between; align-items: center; margin-top: .35rem; }
+.cc { color: var(--muted); font-size: .72rem; }
+.clear-timer { color: var(--yellow); font-size: .72rem; }
 
-.meta { display: flex; justify-content: space-between; align-items: center; margin: 0.35rem 0 0.6rem; }
-.cc { color: var(--muted); font-size: 0.75rem; }
-.typing { color: var(--muted); font-size: 0.75rem; font-style: italic; min-height: 1em; }
-
-/* JOIN INPUT */
-.join-group { display: flex; gap: 0.6rem; margin: 1rem 0 0.5rem; }
+/* ── JOIN INPUT ── */
+.join-row { display: flex; gap: .55rem; margin-top: .7rem; }
 .code-input {
   flex: 1; background: var(--card2); border: 2px solid var(--border);
   border-radius: 10px; color: var(--text);
-  font-size: 1.5rem; font-family: 'Courier New', monospace; font-weight: 700;
-  letter-spacing: 0.15em; text-align: center; text-transform: uppercase;
-  padding: 0.6rem 0.5rem; outline: none; transition: border-color 0.18s;
+  font-size: 1.35rem; font-family: 'Courier New', monospace; font-weight: 700;
+  letter-spacing: .15em; text-align: center; text-transform: uppercase;
+  padding: .5rem .4rem; outline: none; transition: border-color .18s;
 }
 .code-input:focus { border-color: var(--accent); }
-.err { color: var(--red); font-size: 0.82rem; min-height: 1.2em; }
+.err { color: var(--red); font-size: .8rem; margin-top: .4rem; min-height: 1.1em; }
 
-/* DIVIDER */
+/* ── DIVIDER ── */
 .divider {
-  display: flex; align-items: center; gap: 0.6rem;
-  color: var(--muted); font-size: 0.75rem; margin: 1rem 0;
+  display: flex; align-items: center; gap: .6rem;
+  color: var(--muted); font-size: .73rem; margin: .9rem 0;
 }
 .divider::before, .divider::after { content:''; flex:1; border-top: 1px solid var(--border); }
 
-/* INFO */
-.info-list { display: flex; flex-direction: column; gap: 0.4rem; }
-.info-row { display: flex; gap: 0.5rem; color: var(--muted); font-size: 0.78rem; line-height: 1.4; }
-
-/* NOTIF */
+/* ── NOTIF ── */
 .notif {
   position: fixed; bottom: 1.25rem; left: 50%;
   transform: translateX(-50%) translateY(8px);
-  background: var(--card); border: 1px solid var(--border);
-  border-radius: 10px; padding: 0.65rem 1.1rem;
-  font-size: 0.85rem; box-shadow: 0 8px 28px rgba(0,0,0,.3);
-  opacity: 0; transition: all 0.25s; z-index: 999; white-space: nowrap;
+  background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+  padding: .6rem 1.1rem; font-size: .85rem;
+  box-shadow: 0 8px 28px rgba(0,0,0,.3);
+  opacity: 0; transition: all .25s; z-index: 999; white-space: nowrap;
 }
 .notif.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-footer { color: var(--muted); font-size: 0.72rem; padding: 1rem; text-align: center; }
+footer { color: var(--muted); font-size: .7rem; padding: 1rem; text-align: center; }
 </style>
 </head>
 <body>
@@ -247,97 +233,89 @@ footer { color: var(--muted); font-size: 0.72rem; padding: 1rem; text-align: cen
 <header>
   <button class="theme-toggle" id="theme-btn" onclick="toggleTheme()" title="Changer de thème">☀️</button>
   <div class="logo">📋 C+V.me</div>
-  <p class="tagline">Partage de texte instantané entre appareils · Chiffré · Éphémère</p>
+  <p class="tagline">Partage instantané entre appareils · Chiffré de bout en bout · Éphémère</p>
 </header>
 
 <main>
 
-  <!-- HOME -->
+  <!-- ── ÉCRAN ACCUEIL (QR + rejoindre) ───────────────────────────── -->
   <div class="screen active" id="s-home">
-    <div class="home-grid">
-      <button class="choice-btn" onclick="startHost()">
-        <span class="icon">📤</span>
-        <span>Partager</span>
-        <small>Générer un code et envoyer du texte</small>
-      </button>
-      <button class="choice-btn" onclick="showJoin()">
-        <span class="icon">📥</span>
-        <span>Recevoir</span>
-        <small>Entrer un code et récupérer du texte</small>
-      </button>
+
+    <!-- QR + code -->
+    <div class="card card-center">
+      <div id="h-pill" class="pill waiting">
+        <span class="dot"></span><span>En attente de l'autre appareil…</span>
+      </div>
+
+      <div class="qr-wrap">
+        <div class="qr-skeleton" id="qr-skeleton"></div>
+        <img id="qr-img" src="" alt="QR Code" width="170" height="170"
+          style="display:none" onload="qrLoaded()"/>
+      </div>
+      <p class="qr-caption">Scannez avec l'autre appareil</p>
+
+      <div class="code-box">
+        <div class="lbl">ou entrez ce code sur l'autre appareil</div>
+        <div class="code-val" id="h-code">——</div>
+      </div>
+
+      <div class="timer-wrap"><div class="timer-bar" id="h-timer-bar" style="width:100%"></div></div>
+      <div class="timer-txt" id="h-timer-txt">Expire dans 10:00</div>
+
+      <div class="share-row">
+        <div class="share-link" id="share-link">—</div>
+        <button class="btn btn-ghost btn-sm" onclick="copyLink()">🔗 Copier le lien</button>
+      </div>
     </div>
 
-    <div class="card" id="join-card" style="display:none">
-      <div class="card-title">Entrer le code</div>
-      <div class="join-group">
-        <input class="code-input" id="code-input" type="text" maxlength="7"
-          placeholder="ABC-DEF" oninput="fmtCode()" onkeydown="if(event.key==='Enter')joinSession()"/>
-        <button class="btn btn-primary" style="width:auto;padding:0 1.1rem" onclick="joinSession()">→</button>
+    <!-- Rejoindre un autre appareil -->
+    <div class="card">
+      <div class="slabel">Rejoindre un autre appareil</div>
+      <div class="join-row">
+        <input class="code-input" id="join-input" type="text" maxlength="7"
+          placeholder="ABC-DEF" oninput="fmtJoin()" onkeydown="if(event.key==='Enter')manualJoin()"/>
+        <button class="btn btn-primary" style="width:auto;padding:0 1.2rem" onclick="manualJoin()">→</button>
       </div>
       <div class="err" id="join-err"></div>
     </div>
 
-    <div class="card">
-      <div class="info-list">
-        <div class="info-row">🔒 <span>Chiffrement AES-256 côté client — le serveur ne voit jamais votre texte</span></div>
-        <div class="info-row">⏱️ <span>Code valide 10 minutes, expire automatiquement</span></div>
-        <div class="info-row">🌐 <span>Fonctionne entre tous les appareils, tous les réseaux</span></div>
-      </div>
-    </div>
   </div>
 
-  <!-- HOST -->
-  <div class="screen" id="s-host">
-    <div class="card">
-      <div id="h-pill" class="pill waiting"><span class="pd"></span><span>En attente de connexion…</span></div>
-      <div class="code-box">
-        <div class="lbl">Sur l'autre appareil, aller sur ce site et entrer :</div>
-        <div class="code-val" id="h-code">—</div>
-        <div class="sub" id="h-timer-txt">Expire dans 10:00</div>
-      </div>
-      <div class="timer-wrap"><div class="timer-bar" id="h-timer-bar"></div></div>
-      <button class="btn btn-ghost" style="margin-top:0.5rem" onclick="copyCode()">📋 Copier le code</button>
-    </div>
+  <!-- ── ÉCRAN CONNECTÉ (bilatéral) ───────────────────────────────── -->
+  <div class="screen" id="s-connected">
 
-    <div class="card" id="h-transfer" style="display:none">
-      <div class="card-title">✏️ Texte à envoyer</div>
-      <textarea id="h-ta" placeholder="Écris ton texte ici…" oninput="hTyping()"></textarea>
-      <div class="meta">
-        <span class="cc" id="h-cc">0 car.</span>
-        <span class="typing" id="p-typing"></span>
+    <!-- Cet appareil -->
+    <div class="card">
+      <div id="c-pill" class="pill connected">
+        <span class="dot"></span><span>Connecté</span>
       </div>
-      <div class="btn-row">
+      <div class="slabel">Cet appareil</div>
+      <textarea id="my-ta" placeholder="Tapez votre texte ici…" oninput="myCount()"></textarea>
+      <div class="meta">
+        <span class="cc" id="my-cc">0 car.</span>
+      </div>
+      <div class="btn-grid" style="margin-top:.7rem">
         <button class="btn btn-primary" onclick="sendText()">🚀 Envoyer</button>
-        <button class="btn btn-ghost btn-sm" onclick="copyTA('h-ta')">📋 Copier</button>
+        <button class="btn btn-ghost" onclick="copyTA('my-ta')">📋 Copier</button>
       </div>
     </div>
 
-    <button class="btn btn-ghost" onclick="closeHost()" style="margin-top:0.25rem">✕ Fermer la session</button>
-  </div>
-
-  <!-- PEER -->
-  <div class="screen" id="s-peer">
+    <!-- L'autre appareil -->
     <div class="card">
-      <div id="p-pill" class="pill connected"><span class="pd"></span><span>Connecté</span></div>
-      <div class="card-title">📥 Texte reçu</div>
-      <textarea id="p-ta" readonly placeholder="En attente du texte…"></textarea>
+      <div class="slabel">L'autre appareil</div>
+      <textarea id="other-ta" readonly placeholder="En attente du texte…"></textarea>
       <div class="meta">
-        <span class="cc" id="p-cc">0 car.</span>
-        <span class="typing" id="h-typing"></span>
+        <span class="cc" id="other-cc">0 car.</span>
+        <span class="clear-timer" id="clear-timer"></span>
       </div>
-      <div class="btn-row">
-        <button class="btn btn-primary" onclick="copyTA('p-ta')">📋 Copier le texte</button>
-        <button class="btn btn-ghost btn-sm" onclick="document.getElementById('p-ta').value='';cc('p-ta','p-cc')">🗑</button>
+      <div class="btn-grid" style="margin-top:.7rem">
+        <button class="btn btn-primary" onclick="copyTA('other-ta')">📋 Copier</button>
+        <button class="btn btn-ghost" onclick="clearOther()">🗑 Effacer</button>
       </div>
-
-      <div class="divider">répondre (optionnel)</div>
-
-      <textarea id="p-send-ta" placeholder="Envoyer du texte en retour…" oninput="pTyping()"></textarea>
-      <div class="meta"><span class="cc" id="p-send-cc">0 car.</span></div>
-      <button class="btn btn-ghost" onclick="peerSend()" style="margin-top:0.5rem">↩ Envoyer en retour</button>
     </div>
 
-    <button class="btn btn-ghost" onclick="leavePeer()" style="margin-top:0.25rem">✕ Quitter</button>
+    <button class="btn btn-ghost" onclick="leaveSession()" style="margin-top:.1rem">✕ Quitter la session</button>
+
   </div>
 
 </main>
@@ -347,247 +325,287 @@ footer { color: var(--muted); font-size: 0.72rem; padding: 1rem; text-align: cen
 
 <script>
 // ── THEME ─────────────────────────────────────────────────────────────────────
-(function () {
-  const saved = localStorage.getItem('cvme-theme') || 'dark';
-  applyTheme(saved, true);
-})();
-
-function applyTheme(t, silent) {
+function applyTheme(t) {
   document.documentElement.setAttribute('data-theme', t === 'light' ? 'light' : '');
   const btn = document.getElementById('theme-btn');
   if (btn) btn.textContent = t === 'light' ? '🌙' : '☀️';
-  if (!silent) localStorage.setItem('cvme-theme', t);
+  localStorage.setItem('cvme-theme', t);
 }
-
 function toggleTheme() {
-  const current = document.documentElement.getAttribute('data-theme');
-  const next = current === 'light' ? 'dark' : 'light';
-  applyTheme(next);
-  localStorage.setItem('cvme-theme', next);
+  applyTheme(document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light');
 }
+// Sync button icon on load (attribute already set by <head> script)
+applyTheme(localStorage.getItem('cvme-theme') || 'dark');
 
 // ── CRYPTO ────────────────────────────────────────────────────────────────────
-async function getKey(code) {
-  const raw = code.replace('-','') + 'cvme-salt-v1';
+async function getKey(c) {
   const enc = new TextEncoder();
-  const km = await crypto.subtle.importKey('raw', enc.encode(raw), 'PBKDF2', false, ['deriveKey']);
+  const km = await crypto.subtle.importKey('raw', enc.encode(c.replace('-','') + 'cvme-salt-v1'), 'PBKDF2', false, ['deriveKey']);
   return crypto.subtle.deriveKey(
-    { name:'PBKDF2', salt: enc.encode('cvme'), iterations: 100000, hash:'SHA-256' },
+    { name:'PBKDF2', salt: enc.encode('cvme'), iterations:100000, hash:'SHA-256' },
     km, { name:'AES-GCM', length:256 }, false, ['encrypt','decrypt']
   );
 }
-async function aesEncrypt(text, code) {
-  const key = await getKey(code);
-  const iv = crypto.getRandomValues(new Uint8Array(12));
-  const ct = await crypto.subtle.encrypt({name:'AES-GCM',iv}, key, new TextEncoder().encode(text));
+async function aesEncrypt(text, c) {
+  const key = await getKey(c);
+  const iv  = crypto.getRandomValues(new Uint8Array(12));
+  const ct  = await crypto.subtle.encrypt({name:'AES-GCM',iv}, key, new TextEncoder().encode(text));
   const buf = new Uint8Array(12 + ct.byteLength);
   buf.set(iv); buf.set(new Uint8Array(ct), 12);
-  let binary = '';
-  for (let i = 0; i < buf.length; i++) binary += String.fromCharCode(buf[i]);
-  return btoa(binary);
+  let b = ''; for (let i = 0; i < buf.length; i++) b += String.fromCharCode(buf[i]);
+  return btoa(b);
 }
-async function aesDecrypt(b64, code) {
-  const key = await getKey(code);
-  const buf = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
-  const pt = await crypto.subtle.decrypt({name:'AES-GCM', iv:buf.slice(0,12)}, key, buf.slice(12));
+async function aesDecrypt(b64, c) {
+  const key = await getKey(c);
+  const buf = Uint8Array.from(atob(b64), x => x.charCodeAt(0));
+  const pt  = await crypto.subtle.decrypt({name:'AES-GCM', iv:buf.slice(0,12)}, key, buf.slice(12));
   return new TextDecoder().decode(pt);
 }
 
 // ── STATE ─────────────────────────────────────────────────────────────────────
-let code = null, role = null;
-let pollId = null, timerId = null;
-let lastTs = 0;
-let timerStart = null;
+let code = null, role = null, pollId = null, timerId = null, clearTimerId = null, lastTs = 0;
 const TTL = 10 * 60 * 1000;
+const CLEAR_DELAY = 2 * 60 * 1000; // auto-clear reçu après 2 min
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+(async function init() {
+  const params   = new URLSearchParams(window.location.search);
+  const joinCode = params.get('join');
+  if (joinCode) {
+    history.replaceState({}, '', '/');
+    await autoJoin(joinCode.toUpperCase());
+  } else {
+    await createSession();
+  }
+})();
+
+// ── CRÉER UNE SESSION (rôle : host) ──────────────────────────────────────────
+async function createSession() {
+  stopAll(); resetState();
+  try {
+    const data = await fetch('/api/session', {method:'POST'}).then(r => r.json());
+    code = data.code; role = 'host'; lastTs = 0;
+
+    document.getElementById('h-code').textContent = code;
+    const joinUrl = `${window.location.origin}/?join=${code}`;
+    document.getElementById('share-link').textContent = joinUrl;
+
+    // QR code via api.qrserver.com (ne nécessite pas de clé API)
+    const img = document.getElementById('qr-img');
+    img.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=12&bgcolor=ffffff&color=000000&data=${encodeURIComponent(joinUrl)}`;
+
+    startTimer(TTL);
+    show('home');
+    pollHost();
+  } catch(e) {
+    notify('❌ Erreur réseau — réessayez');
+  }
+}
+
+function qrLoaded() {
+  document.getElementById('qr-skeleton').style.display = 'none';
+  document.getElementById('qr-img').style.display = 'block';
+}
+
+// ── REJOINDRE AUTO (rôle : peer, via URL ?join=) ──────────────────────────────
+async function autoJoin(c) {
+  try {
+    const r = await fetch(`/api/session?code=${c}`);
+    if (!r.ok) { notify('❌ Code invalide ou expiré'); await createSession(); return; }
+    code = c; role = 'peer'; lastTs = 0;
+    showConnected();
+    pollPeer();
+  } catch(e) {
+    await createSession();
+  }
+}
+
+// ── REJOINDRE MANUEL ──────────────────────────────────────────────────────────
+async function manualJoin() {
+  const val = document.getElementById('join-input').value.toUpperCase().replace(/\s/g,'');
+  document.getElementById('join-err').textContent = '';
+  if (val.replace('-','').length < 6) {
+    document.getElementById('join-err').textContent = 'Code incomplet'; return;
+  }
+  stopAll();
+  if (code && role === 'host') {
+    try { await fetch(`/api/message?code=${code}`, {method:'DELETE'}); } catch(e) {}
+  }
+  await autoJoin(val);
+}
+
+// ── POLL HOST ─────────────────────────────────────────────────────────────────
+function pollHost() {
+  pollId = setInterval(async () => {
+    try {
+      const r = await fetch(`/api/message?code=${code}&from=host&since=${lastTs}`);
+      if (!r.ok) { stopAll(); createSession(); return; }
+      const d = await r.json();
+      // Peer vient de se connecter → passer à l'écran connecté
+      if (d.peerConnected && !document.getElementById('s-connected').classList.contains('active')) {
+        showConnected();
+      }
+      // Message reçu de l'autre appareil
+      if (d.payload && d.ts > lastTs) {
+        lastTs = d.ts;
+        try { receiveText(await aesDecrypt(d.payload, code)); } catch(e) {}
+      }
+    } catch(e) {}
+  }, 1200);
+}
+
+// ── POLL PEER ─────────────────────────────────────────────────────────────────
+function pollPeer() {
+  pollId = setInterval(async () => {
+    try {
+      const r = await fetch(`/api/message?code=${code}&from=peer&since=${lastTs}`);
+      if (!r.ok) {
+        setPill('c-pill','error','Session fermée par l\'hôte');
+        stopAll(); setTimeout(createSession, 2000); return;
+      }
+      const d = await r.json();
+      if (d.payload && d.ts > lastTs) {
+        lastTs = d.ts;
+        try { receiveText(await aesDecrypt(d.payload, code)); } catch(e) {}
+      }
+    } catch(e) {}
+  }, 1200);
+}
+
+// ── RECEVOIR DU TEXTE ─────────────────────────────────────────────────────────
+function receiveText(txt) {
+  document.getElementById('other-ta').value = txt;
+  updateCC('other-ta','other-cc');
+  notify('📥 Texte reçu !');
+  // Auto-clear après 2 minutes (comme CopyPaste.me)
+  startClearTimer();
+}
+
+function startClearTimer() {
+  clearTimeout(clearTimerId);
+  const el = document.getElementById('clear-timer');
+  const start = Date.now();
+  function tick() {
+    const rem = Math.max(0, CLEAR_DELAY - (Date.now() - start));
+    if (rem === 0) {
+      el.textContent = '';
+      document.getElementById('other-ta').value = '';
+      updateCC('other-ta','other-cc');
+      return;
+    }
+    const s = Math.ceil(rem / 1000), m = Math.floor(s / 60);
+    el.textContent = `Efface dans ${m}:${String(s % 60).padStart(2,'0')}`;
+    clearTimerId = setTimeout(tick, 1000);
+  }
+  tick();
+}
+
+function clearOther() {
+  clearTimeout(clearTimerId);
+  document.getElementById('other-ta').value = '';
+  document.getElementById('clear-timer').textContent = '';
+  updateCC('other-ta','other-cc');
+}
+
+// ── ENVOYER DU TEXTE ──────────────────────────────────────────────────────────
+async function sendText() {
+  const txt = document.getElementById('my-ta').value.trim();
+  if (!txt) return;
+  try {
+    const payload = await aesEncrypt(txt, code);
+    await fetch(`/api/message?code=${code}&from=${role}`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({payload})
+    });
+    notify('✅ Envoyé !');
+  } catch(e) { notify('❌ Erreur d\'envoi'); }
+}
+
+// ── COPIER ────────────────────────────────────────────────────────────────────
+function copyTA(id) {
+  const v = document.getElementById(id).value;
+  if (!v) { notify('Rien à copier'); return; }
+  navigator.clipboard.writeText(v).then(() => notify('📋 Copié !'));
+}
+
+function copyLink() {
+  const link = document.getElementById('share-link').textContent;
+  navigator.clipboard.writeText(link).then(() => notify('🔗 Lien copié !'));
+}
+
+// ── QUITTER ───────────────────────────────────────────────────────────────────
+async function leaveSession() {
+  stopAll();
+  if (code && role === 'host') {
+    try { await fetch(`/api/message?code=${code}`, {method:'DELETE'}); } catch(e) {}
+  }
+  resetState();
+  await createSession();
+}
+
+// ── TIMER SESSION ─────────────────────────────────────────────────────────────
+function startTimer(ms) {
+  const start = Date.now();
+  const bar   = document.getElementById('h-timer-bar');
+  const txt   = document.getElementById('h-timer-txt');
+  clearInterval(timerId);
+  function tick() {
+    const rem = Math.max(0, ms - (Date.now() - start));
+    const pct = (rem / ms) * 100;
+    bar.style.width = pct + '%';
+    bar.className   = 'timer-bar' + (pct < 15 ? ' crit' : pct < 40 ? ' warn' : '');
+    const s = Math.ceil(rem / 1000), m = Math.floor(s / 60);
+    txt.textContent = `Expire dans ${m}:${String(s % 60).padStart(2,'0')}`;
+    if (rem <= 0) { clearInterval(timerId); createSession(); }
+  }
+  tick(); timerId = setInterval(tick, 1000);
+}
 
 // ── SCREENS ───────────────────────────────────────────────────────────────────
 function show(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('s-' + id).classList.add('active');
 }
-
-// ── HOME ──────────────────────────────────────────────────────────────────────
-function showJoin() {
-  const c = document.getElementById('join-card');
-  c.style.display = c.style.display === 'none' ? 'block' : 'none';
-  if (c.style.display === 'block') document.getElementById('code-input').focus();
-}
-
-function fmtCode() {
-  const el = document.getElementById('code-input');
-  let v = el.value.toUpperCase().replace(/[^A-Z0-9]/g,'');
-  if (v.length > 3) v = v.slice(0,3) + '-' + v.slice(3,6);
-  el.value = v;
-}
-
-// ── HOST ──────────────────────────────────────────────────────────────────────
-async function startHost() {
-  const res = await fetch('/api/session', {method:'POST'});
-  const data = await res.json();
-  code = data.code;
-  role = 'host';
-  lastTs = 0;
-  document.getElementById('h-code').textContent = code;
-  startTimer(TTL);
-  show('host');
-  pollHost();
-}
-
-function pollHost() {
-  pollId = setInterval(async () => {
-    try {
-      const r = await fetch(`/api/message?code=${code}&from=host&since=${lastTs}`);
-      if (!r.ok) { stopAll(); return; }
-      const d = await r.json();
-
-      // Peer connected?
-      if (d.peerConnected) {
-        setPill('h-pill','connected','🟢 Appareil connecté');
-        document.getElementById('h-transfer').style.display = 'block';
-      }
-
-      // New message for host (from peer)?
-      if (d.payload && d.ts > lastTs) {
-        lastTs = d.ts;
-        try {
-          const txt = await aesDecrypt(d.payload, code);
-          const ta = document.getElementById('h-ta');
-          ta.value = txt; cc('h-ta','h-cc');
-          showTyping('p-typing', "L'autre appareil a envoyé du texte");
-          notify('📥 Texte reçu en retour !');
-        } catch(e) {}
-      }
-    } catch(e) {}
-  }, 1200);
-}
-
-async function sendText() {
-  const txt = document.getElementById('h-ta').value.trim();
-  if (!txt) return;
-  const payload = await aesEncrypt(txt, code);
-  await fetch(`/api/message?code=${code}&from=host`, {
-    method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({payload})
-  });
-  notify('✅ Texte envoyé !');
-}
-
-function hTyping() {
-  cc('h-ta','h-cc');
-  // lightweight: just update char count (typing indicator via polling would add complexity)
-}
-
-function copyCode() {
-  navigator.clipboard.writeText(code).then(() => notify('📋 Code copié !'));
-}
-
-async function closeHost() {
-  if (code) await fetch(`/api/message?code=${code}`, {method:'DELETE'});
-  stopAll(); reset(); show('home');
-}
-
-// ── PEER ──────────────────────────────────────────────────────────────────────
-async function joinSession() {
-  const val = document.getElementById('code-input').value.toUpperCase().replace(/\s/g,'');
-  document.getElementById('join-err').textContent = '';
-  if (val.replace('-','').length < 6) {
-    document.getElementById('join-err').textContent = 'Code incomplet'; return;
-  }
-  const r = await fetch(`/api/session?code=${val}`);
-  if (!r.ok) {
-    document.getElementById('join-err').textContent = 'Code invalide ou expiré'; return;
-  }
-  code = val; role = 'peer'; lastTs = 0;
-  show('peer');
-  pollPeer();
-}
-
-function pollPeer() {
-  pollId = setInterval(async () => {
-    try {
-      const r = await fetch(`/api/message?code=${code}&from=peer&since=${lastTs}`);
-      if (!r.ok) {
-        setPill('p-pill','error','Session fermée');
-        stopAll(); return;
-      }
-      const d = await r.json();
-      if (d.payload && d.ts > lastTs) {
-        lastTs = d.ts;
-        try {
-          const txt = await aesDecrypt(d.payload, code);
-          document.getElementById('p-ta').value = txt;
-          cc('p-ta','p-cc');
-          notify('📥 Texte reçu !');
-        } catch(e) {}
-      }
-    } catch(e) {}
-  }, 1200);
-}
-
-async function peerSend() {
-  const txt = document.getElementById('p-send-ta').value.trim();
-  if (!txt) return;
-  const payload = await aesEncrypt(txt, code);
-  await fetch(`/api/message?code=${code}&from=peer`, {
-    method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({payload})
-  });
-  document.getElementById('p-send-ta').value = '';
-  cc('p-send-ta','p-send-cc');
-  notify('✅ Texte envoyé !');
-}
-
-function pTyping() { cc('p-send-ta','p-send-cc'); }
-
-function leavePeer() { stopAll(); reset(); show('home'); }
-
-// ── TIMER ─────────────────────────────────────────────────────────────────────
-function startTimer(ms) {
-  timerStart = Date.now();
-  const bar = document.getElementById('h-timer-bar');
-  const txt = document.getElementById('h-timer-txt');
-  clearInterval(timerId);
-  function tick() {
-    const rem = Math.max(0, ms - (Date.now() - timerStart));
-    const pct = (rem / ms) * 100;
-    bar.style.width = pct + '%';
-    bar.className = 'timer-bar' + (pct < 15 ? ' crit' : pct < 40 ? ' warn' : '');
-    const s = Math.ceil(rem/1000), m = Math.floor(s/60);
-    txt.textContent = `Expire dans ${m}:${String(s%60).padStart(2,'0')}`;
-    if (rem <= 0) { clearInterval(timerId); closeHost(); }
-  }
-  tick(); timerId = setInterval(tick, 1000);
+function showConnected() {
+  show('connected');
+  setPill('c-pill','connected','🟢 Connecté');
 }
 
 // ── HELPERS ───────────────────────────────────────────────────────────────────
-function stopAll() { clearInterval(pollId); clearInterval(timerId); }
+function stopAll() {
+  clearInterval(pollId); clearInterval(timerId); clearTimeout(clearTimerId);
+  pollId = timerId = clearTimerId = null;
+}
 
-function reset() {
+function resetState() {
   code = null; role = null; lastTs = 0;
-  document.getElementById('h-ta').value = '';
-  document.getElementById('p-ta').value = '';
-  document.getElementById('p-send-ta').value = '';
-  document.getElementById('code-input').value = '';
+  ['my-ta','other-ta'].forEach(id => { document.getElementById(id).value = ''; });
+  ['my-cc','other-cc','clear-timer'].forEach(id => { document.getElementById(id).textContent = ''; });
+  ['join-input'].forEach(id => { document.getElementById(id).value = ''; });
   document.getElementById('join-err').textContent = '';
-  document.getElementById('join-card').style.display = 'none';
-  document.getElementById('h-transfer').style.display = 'none';
-  setPill('h-pill','waiting','En attente de connexion…');
+  document.getElementById('qr-skeleton').style.display = 'block';
+  document.getElementById('qr-img').style.display     = 'none';
+  setPill('h-pill','waiting','En attente de l\'autre appareil…');
 }
 
 function setPill(id, cls, txt) {
   const el = document.getElementById(id);
   el.className = 'pill ' + cls;
-  el.innerHTML = `<span class="pd"></span><span>${txt}</span>`;
+  el.innerHTML = `<span class="dot"></span><span>${txt}</span>`;
 }
 
-function cc(taId, ccId) {
-  document.getElementById(ccId).textContent = document.getElementById(taId).value.length.toLocaleString() + ' car.';
+function updateCC(taId, ccId) {
+  const n = document.getElementById(taId).value.length;
+  document.getElementById(ccId).textContent = n ? n.toLocaleString() + ' car.' : '';
 }
 
-function copyTA(id) {
-  const v = document.getElementById(id).value;
-  if (!v) return notify('Rien à copier');
-  navigator.clipboard.writeText(v).then(() => notify('📋 Copié !'));
+function myCount() { updateCC('my-ta','my-cc'); }
+
+function fmtJoin() {
+  const el = document.getElementById('join-input');
+  let v = el.value.toUpperCase().replace(/[^A-Z0-9]/g,'');
+  if (v.length > 3) v = v.slice(0,3) + '-' + v.slice(3,6);
+  el.value = v;
 }
 
 let ntTimer;
@@ -596,12 +614,6 @@ function notify(msg) {
   el.textContent = msg; el.classList.add('show');
   clearTimeout(ntTimer);
   ntTimer = setTimeout(() => el.classList.remove('show'), 2500);
-}
-
-function showTyping(id, msg) {
-  const el = document.getElementById(id);
-  el.textContent = msg;
-  setTimeout(() => { el.textContent = ''; }, 3000);
 }
 </script>
 </body>
