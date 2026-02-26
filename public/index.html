@@ -6,22 +6,46 @@
 <title>C+V.me — Partage de texte instantané</title>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ── NORD (dark, défaut) ───────────────────────────────────────── */
 :root {
-  --bg: #0d0d14;
-  --card: #15151f;
-  --card2: #1c1c28;
-  --border: #27273a;
-  --accent: #6366f1;
-  --accent-h: #4f52d9;
-  --accent-glow: rgba(99,102,241,0.25);
-  --accent2: #a5b4fc;
-  --green: #4ade80;
-  --red: #f87171;
-  --yellow: #fbbf24;
-  --text: #e2e2f2;
-  --muted: #64648a;
+  --bg: #2E3440;
+  --card: #3B4252;
+  --card2: #434C5E;
+  --border: #4C566A;
+  --accent: #5E81AC;
+  --accent-h: #4C6F9A;
+  --accent-glow: rgba(94,129,172,0.25);
+  --accent2: #88C0D0;
+  --green: #A3BE8C;
+  --red: #BF616A;
+  --yellow: #EBCB8B;
+  --text: #ECEFF4;
+  --muted: #81A1C1;
+  --card-hover: #434C5E;
+  --ghost-hover: #4C566A;
   --r: 14px;
 }
+
+/* ── BEIGE (light) ─────────────────────────────────────────────── */
+[data-theme="light"] {
+  --bg: #F5F0E8;
+  --card: #EDE8DC;
+  --card2: #E3DDD1;
+  --border: #CFC7B4;
+  --accent: #5E81AC;
+  --accent-h: #4C6F9A;
+  --accent-glow: rgba(94,129,172,0.18);
+  --accent2: #3B4252;
+  --green: #4F7942;
+  --red: #AF4F55;
+  --yellow: #957000;
+  --text: #2E3440;
+  --muted: #6D7A8E;
+  --card-hover: #DDD8CC;
+  --ghost-hover: #D4CFC3;
+}
+
 body {
   background: var(--bg);
   color: var(--text);
@@ -30,12 +54,15 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
+  transition: background 0.25s, color 0.25s;
 }
 
 /* HEADER */
 header {
+  position: relative;
   text-align: center;
   padding: 2.5rem 1rem 1rem;
+  width: 100%;
 }
 .logo {
   font-size: 2rem;
@@ -46,6 +73,26 @@ header {
   background-clip: text;
 }
 .tagline { color: var(--muted); font-size: 0.85rem; margin-top: 0.35rem; }
+
+/* THEME TOGGLE */
+.theme-toggle {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  width: 38px;
+  height: 38px;
+  cursor: pointer;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.18s, transform 0.18s, background 0.25s;
+  line-height: 1;
+}
+.theme-toggle:hover { border-color: var(--accent); transform: scale(1.1); }
 
 /* MAIN */
 main {
@@ -66,6 +113,7 @@ main {
   border-radius: var(--r);
   padding: 1.5rem;
   margin-bottom: 0.75rem;
+  transition: background 0.25s, border-color 0.25s;
 }
 .card-title { font-weight: 700; font-size: 1rem; margin-bottom: 0.9rem; }
 
@@ -86,7 +134,7 @@ main {
   font-weight: 600;
   transition: all 0.18s;
 }
-.choice-btn:hover { border-color: var(--accent); background: #1a1a2a; box-shadow: 0 0 24px var(--accent-glow); transform: translateY(-2px); }
+.choice-btn:hover { border-color: var(--accent); background: var(--card-hover); box-shadow: 0 0 24px var(--accent-glow); transform: translateY(-2px); }
 .choice-btn .icon { font-size: 1.8rem; }
 .choice-btn small { color: var(--muted); font-weight: 400; font-size: 0.75rem; text-align: center; line-height: 1.3; }
 
@@ -101,7 +149,7 @@ main {
 .btn-primary { background: var(--accent); color: #fff; }
 .btn-primary:hover:not(:disabled) { background: var(--accent-h); transform: translateY(-1px); box-shadow: 0 4px 18px var(--accent-glow); }
 .btn-ghost { background: var(--card2); color: var(--text); border: 1px solid var(--border); }
-.btn-ghost:hover:not(:disabled) { background: #222230; }
+.btn-ghost:hover:not(:disabled) { background: var(--ghost-hover); }
 .btn-sm { width: auto; padding: 0.5rem 0.9rem; font-size: 0.82rem; }
 .btn-row { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.75rem; }
 
@@ -135,10 +183,10 @@ main {
   font-size: 0.78rem; font-weight: 600; margin-bottom: 1rem;
 }
 .pill .pd { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
-.pill.waiting { background: rgba(251,191,36,.1); color: var(--yellow); border: 1px solid rgba(251,191,36,.2); }
+.pill.waiting { background: rgba(235,203,139,.12); color: var(--yellow); border: 1px solid rgba(235,203,139,.25); }
 .pill.waiting .pd { animation: blink 1.2s infinite; }
-.pill.connected { background: rgba(74,222,128,.1); color: var(--green); border: 1px solid rgba(74,222,128,.2); }
-.pill.error { background: rgba(248,113,113,.1); color: var(--red); border: 1px solid rgba(248,113,113,.2); }
+.pill.connected { background: rgba(163,190,140,.12); color: var(--green); border: 1px solid rgba(163,190,140,.25); }
+.pill.error { background: rgba(191,97,106,.12); color: var(--red); border: 1px solid rgba(191,97,106,.25); }
 @keyframes blink { 0%,100%{opacity:1}50%{opacity:.2} }
 
 /* TEXTAREA */
@@ -148,7 +196,7 @@ textarea {
   border-radius: 10px; color: var(--text);
   font-size: 0.92rem; font-family: 'Courier New', monospace;
   padding: 0.8rem; resize: vertical; outline: none;
-  transition: border-color 0.18s;
+  transition: border-color 0.18s, background 0.25s;
 }
 textarea:focus { border-color: var(--accent); }
 textarea[readonly] { opacity: 0.8; }
@@ -186,7 +234,7 @@ textarea[readonly] { opacity: 0.8; }
   transform: translateX(-50%) translateY(8px);
   background: var(--card); border: 1px solid var(--border);
   border-radius: 10px; padding: 0.65rem 1.1rem;
-  font-size: 0.85rem; box-shadow: 0 8px 28px rgba(0,0,0,.5);
+  font-size: 0.85rem; box-shadow: 0 8px 28px rgba(0,0,0,.3);
   opacity: 0; transition: all 0.25s; z-index: 999; white-space: nowrap;
 }
 .notif.show { opacity: 1; transform: translateX(-50%) translateY(0); }
@@ -197,6 +245,7 @@ footer { color: var(--muted); font-size: 0.72rem; padding: 1rem; text-align: cen
 <body>
 
 <header>
+  <button class="theme-toggle" id="theme-btn" onclick="toggleTheme()" title="Changer de thème">☀️</button>
   <div class="logo">📋 C+V.me</div>
   <p class="tagline">Partage de texte instantané entre appareils · Chiffré · Éphémère</p>
 </header>
@@ -297,6 +346,26 @@ footer { color: var(--muted); font-size: 0.72rem; padding: 1rem; text-align: cen
 <div class="notif" id="notif"></div>
 
 <script>
+// ── THEME ─────────────────────────────────────────────────────────────────────
+(function () {
+  const saved = localStorage.getItem('cvme-theme') || 'dark';
+  applyTheme(saved, true);
+})();
+
+function applyTheme(t, silent) {
+  document.documentElement.setAttribute('data-theme', t === 'light' ? 'light' : '');
+  const btn = document.getElementById('theme-btn');
+  if (btn) btn.textContent = t === 'light' ? '🌙' : '☀️';
+  if (!silent) localStorage.setItem('cvme-theme', t);
+}
+
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme');
+  const next = current === 'light' ? 'dark' : 'light';
+  applyTheme(next);
+  localStorage.setItem('cvme-theme', next);
+}
+
 // ── CRYPTO ────────────────────────────────────────────────────────────────────
 async function getKey(code) {
   const raw = code.replace('-','') + 'cvme-salt-v1';
